@@ -70,7 +70,7 @@ export const useSystemCalls = () => {
     tournamentId: BigNumberish,
     tournamentName: string,
     tournamentModel: Tournament,
-    player_name: BigNumberish,
+    player_name: ByteArray,
     player_address: BigNumberish,
     qualification: CairoOption<QualificationProofEnum>,
     duration: number,

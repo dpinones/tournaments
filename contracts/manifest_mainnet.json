@@ -709,6 +709,22 @@
           },
           {
             "type": "function",
+            "name": "owners_count",
+            "inputs": [
+              {
+                "name": "resource",
+                "type": "core::felt252"
+              }
+            ],
+            "outputs": [
+              {
+                "type": "core::integer::u64"
+              }
+            ],
+            "state_mutability": "view"
+          },
+          {
+            "type": "function",
             "name": "is_writer",
             "inputs": [
               {
@@ -1328,6 +1344,8 @@
   },
   "contracts": [
     {
+      "address": "0x39f2304f757731299f26827ee531b425a6833d208fed300f292b1a96125713c",
+      "class_hash": "0x49071efd120f1fe7a81f338ccd4b949f60dda6697f3b8ab03bcc217752af19e",
       "address": "0x39f2304f757731299f26827ee531b425a6833d208fed300f292b1a96125713c",
       "class_hash": "0x49071efd120f1fe7a81f338ccd4b949f60dda6697f3b8ab03bcc217752af19e",
       "abi": [

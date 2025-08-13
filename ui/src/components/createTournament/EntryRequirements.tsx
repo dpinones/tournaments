@@ -83,6 +83,8 @@ const EntryRequirements = ({ form }: StepProps) => {
     namespace: namespace,
   });
 
+  const totalPages = Math.ceil(tournamentsCount / 10);
+
   const tournamentsData = tournaments.map((tournament) => {
     const processedTournament = processTournamentFromSql(tournament);
     const processedPrizes = processPrizesFromSql(
@@ -470,7 +472,7 @@ const EntryRequirements = ({ form }: StepProps) => {
                                                   }
                                                 }}
                                               >
-                                                {feltToString(game.name)}
+                                                {game.name}
                                                 <span className="flex items-center justify-center">
                                                   <TokenGameIcon
                                                     size="xs"
@@ -606,9 +608,7 @@ const EntryRequirements = ({ form }: StepProps) => {
                                                       side="top"
                                                       className="bg-black text-neutral border border-brand-muted px-2 py-1 rounded text-sm"
                                                     >
-                                                      {name
-                                                        ? feltToString(name)
-                                                        : "Unknown"}
+                                                      {name ? name : "Unknown"}
                                                     </TooltipContent>
                                                   </Tooltip>
                                                 </div>
@@ -642,11 +642,17 @@ const EntryRequirements = ({ form }: StepProps) => {
                                     </div>
                                     <div className="px-4 pb-2 flex justify-center">
                                       <Pagination
-                                        totalPages={Math.ceil(
-                                          tournamentsCount / 10
-                                        )}
+                                        totalPages={totalPages}
                                         currentPage={currentPage}
-                                        setCurrentPage={setCurrentPage}
+                                        nextPage={() =>
+                                          setCurrentPage(currentPage + 1)
+                                        }
+                                        previousPage={() =>
+                                          setCurrentPage(currentPage - 1)
+                                        }
+                                        hasNextPage={currentPage < totalPages}
+                                        hasPreviousPage={currentPage > 1}
+                                        goToPage={setCurrentPage}
                                       />
                                     </div>
                                   </DialogContent>

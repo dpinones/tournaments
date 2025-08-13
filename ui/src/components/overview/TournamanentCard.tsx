@@ -305,7 +305,7 @@ export const TournamentCard = ({
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" align="center" sideOffset={-10}>
-                {gameName ? feltToString(gameName) : "Unknown"}
+                {gameName ? gameName : "Unknown"}
               </TooltipContent>
             </Tooltip>
           </div>

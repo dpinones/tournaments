@@ -15,14 +15,14 @@ import {
 
 export enum ChainId {
   KATANA_LOCAL = "KATANA_LOCAL",
-  WP_BUDOKAN = "WP_BUDOKAN",
+  WP_PG_SLOT_2 = "WP_PG_SLOT_2",
   SN_MAIN = "SN_MAIN",
   SN_SEPOLIA = "SN_SEPOLIA",
 }
 
 export enum NetworkId {
   KATANA_LOCAL = "KATANA_LOCAL",
-  WP_BUDOKAN = "KATANA",
+  WP_PG_SLOT_2 = "SLOT",
   SN_MAIN = "MAINNET",
   SN_SEPOLIA = "SEPOLIA",
 }
@@ -71,6 +71,7 @@ export type DojoChainConfig = {
   testnet?: boolean;
   nativeCurrency?: NativeCurrency;
   explorers?: ChainExplorers;
+  denshokanAddress?: string;
 };
 
 const localKatanaConfig: DojoChainConfig = {
@@ -98,10 +99,10 @@ const localKatanaConfig: DojoChainConfig = {
 
 const slotKatanaConfig: DojoChainConfig = {
   chain: undefined, // derive from this
-  chainId: ChainId.WP_BUDOKAN,
-  name: "Katana Slot",
-  rpcUrl: "https://api.cartridge.gg/x/budokan-katana/katana",
-  toriiUrl: "https://api.cartridge.gg/x/budokan-katana/torii",
+  chainId: ChainId.WP_PG_SLOT_2,
+  name: "PG Slot",
+  rpcUrl: "https://api.cartridge.gg/x/pg-slot-2/katana",
+  toriiUrl: "https://api.cartridge.gg/x/pg-slot-2/torii",
   toriiTokensUrl: "",
   relayUrl: undefined,
   blastRpc: undefined,
@@ -124,7 +125,7 @@ const snSepoliaConfig: DojoChainConfig = {
   chainId: ChainId.SN_SEPOLIA,
   name: "Starknet Sepolia",
   rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-  toriiUrl: "https://api.cartridge.gg/x/budokan-sepolia/torii",
+  toriiUrl: "https://api.cartridge.gg/x/pg-sepolia-2/torii",
   toriiTokensUrl: "",
   relayUrl: undefined,
   blastRpc: undefined,
@@ -137,6 +138,8 @@ const snSepoliaConfig: DojoChainConfig = {
   accountClassHash: undefined,
   ethAddress: sepolia.nativeCurrency.address,
   connectorIds: [supportedConnectorIds.CONTROLLER],
+  denshokanAddress:
+    "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4",
 };
 
 const snMainnetConfig: DojoChainConfig = {
@@ -177,6 +180,10 @@ const makeDojoChainConfig = (config: DojoChainConfig): DojoChainConfig => {
         default: { http: [] },
         public: { http: [] },
       },
+      paymasterRpcUrls: {
+        default: { http: [] },
+        public: { http: [] },
+      },
       explorers: chain.explorers,
     } as Chain;
   }
@@ -193,7 +200,7 @@ const makeDojoChainConfig = (config: DojoChainConfig): DojoChainConfig => {
 export const CHAINS: Record<ChainId, DojoChainConfig> = {
   [ChainId.SN_MAIN]: makeDojoChainConfig(snMainnetConfig),
   [ChainId.SN_SEPOLIA]: makeDojoChainConfig(snSepoliaConfig),
-  [ChainId.WP_BUDOKAN]: makeDojoChainConfig(slotKatanaConfig),
+  [ChainId.WP_PG_SLOT_2]: makeDojoChainConfig(slotKatanaConfig),
   [ChainId.KATANA_LOCAL]: makeDojoChainConfig(localKatanaConfig),
 };
 

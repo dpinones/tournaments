@@ -220,13 +220,15 @@ const Header = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     key="slot"
-                    active={selectedChainConfig.chainId === ChainId.WP_BUDOKAN}
+                    active={
+                      selectedChainConfig.chainId === ChainId.WP_PG_SLOT_2
+                    }
                     onClick={() => switchToSlot()}
                   >
                     <span className="[&_svg]:w-8 [&_svg]:h-8">
                       <SLOT />
                     </span>
-                    {NetworkId[ChainId.WP_BUDOKAN]}
+                    {NetworkId[ChainId.WP_PG_SLOT_2]}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

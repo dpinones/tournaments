@@ -70,7 +70,6 @@ export const DojoContextProvider = ({ children }: { children: ReactNode }) => {
     init<SchemaType>({
       client: {
         toriiUrl: selectedChainConfig.toriiUrl!,
-        relayUrl: selectedChainConfig.relayUrl ?? "",
         worldAddress: manifest.world.address ?? "",
       },
       domain: {

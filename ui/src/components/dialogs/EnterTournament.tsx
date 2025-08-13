@@ -11,14 +11,13 @@ import { useSystemCalls } from "@/dojo/hooks/useSystemCalls";
 import { useAccount, useConnect, useDisconnect } from "@starknet-react/core";
 import { Tournament, Token, EntryCount } from "@/generated/models.gen";
 import {
-  stringToFelt,
   feltToString,
   indexAddress,
   bigintToHex,
   formatNumber,
   displayAddress,
 } from "@/lib/utils";
-import { addAddressPadding, BigNumberish } from "starknet";
+import { addAddressPadding, BigNumberish, byteArray } from "starknet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useConnectToSelectedChain } from "@/dojo/hooks/useChain";
@@ -34,6 +33,7 @@ import {
   useGetTournamentLeaderboards,
   useGetTournamentQualificationEntries,
 } from "@/dojo/hooks/useSqlQueries";
+import { useGameTokens } from "metagame-sdk";
 import { useDojo } from "@/context/dojo";
 import { processQualificationProof } from "@/lib/utils/formatting";
 import { getTokenLogoUrl } from "@/lib/tokensMeta";
@@ -109,7 +109,7 @@ export function EnterTournamentDialog({
         feltToString(tournamentModel?.metadata.name),
         tournamentModel,
         // (Number(entryCountModel?.count) ?? 0) + 1,
-        stringToFelt(playerName.trim()),
+        byteArray.byteArrayFromString(playerName.trim()),
         addAddressPadding(address!),
         qualificationProof,
         // gameCount
@@ -214,20 +214,14 @@ export function EnterTournamentDialog({
     indexAddress(tournament.game_config?.address ?? "")
   );
 
-  const { data: ownedGames } = useGetAccountTokenIds(
-    indexAddress(address ?? ""),
-    requiredTournamentGameAddresses,
-    requiredTournamentGameAddresses.length > 0
-  );
+  const { data: gameTokens } = useGameTokens({
+    owner: address,
+    gameAddresses: requiredTournamentGameAddresses,
+  });
 
   const ownedGameIds = useMemo(() => {
-    return ownedGames
-      ?.map((game) => {
-        const parts = game.token_id?.split(":");
-        return parts?.[1] ?? null;
-      })
-      .filter(Boolean);
-  }, [ownedGames]);
+    return gameTokens?.map((game) => game.token_id).filter(Boolean);
+  }, [gameTokens]);
 
   const { data: registrations } = useGetTournamentRegistrants({
     namespace: namespace ?? "",
@@ -335,7 +329,7 @@ export function EnterTournamentDialog({
         // Find all owned token IDs that appear in the leaderboard and their positions
         for (let i = 0; i < leaderboardTokenIds.length; i++) {
           const leaderboardTokenId = leaderboardTokenIds[i];
-          if (ownedGameIds.includes(leaderboardTokenId)) {
+          if (ownedGameIds.includes(Number(leaderboardTokenId))) {
             acc[leaderboard.tournament_id].push({
               tokenId: leaderboardTokenId,
               position: i + 1, // Convert to 1-based position for display
@@ -349,7 +343,6 @@ export function EnterTournamentDialog({
   }, [leaderboards, ownedGameIds, tournamentsData, currentTime]);
 
   // need to get the number of entries for each of the qualification methods of the qualifying type
-  // TODO: add for token and allowlist
 
   const qualificationMethods = useMemo(() => {
     const methods = [];

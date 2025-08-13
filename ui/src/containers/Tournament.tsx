@@ -6,25 +6,13 @@ import {
   MONEY,
   GIFT,
   SPACE_INVADER_SOLID,
+  SLIDERS,
 } from "@/components/Icons";
 import { useNavigate, useParams } from "react-router-dom";
-import EntrantsTable from "@/components/tournament/table/EntrantsTable";
 import TournamentTimeline from "@/components/TournamentTimeline";
-import {
-  bigintToHex,
-  feltToString,
-  formatTime,
-  indexAddress,
-} from "@/lib/utils";
+import { bigintToHex, feltToString, formatTime } from "@/lib/utils";
 import { addAddressPadding, CairoCustomEnum } from "starknet";
-import { useAccount } from "@starknet-react/core";
-import {
-  useSubscribeGamesQuery,
-  // useGetGameCounterQuery,
-  useGetTournamentQuery,
-  useSubscribeScoresQuery,
-  useGetScoresQuery,
-} from "@/dojo/hooks/useSdkQueries";
+import { useGetTournamentQuery } from "@/dojo/hooks/useSdkQueries";
 import { getEntityIdFromKeys } from "@dojoengine/utils";
 import {
   Tournament as TournamentModel,
@@ -49,7 +37,6 @@ import {
   processTournamentFromSql,
 } from "@/lib/utils/formatting";
 import useModel from "@/dojo/hooks/useModel";
-import { useGameEndpoints } from "@/dojo/hooks/useGameEndpoints";
 import { EnterTournamentDialog } from "@/components/dialogs/EnterTournament";
 import ScoreTable from "@/components/tournament/table/ScoreTable";
 import { useEkuboPrices } from "@/hooks/useEkuboPrices";
@@ -60,7 +47,6 @@ import PrizesContainer from "@/components/tournament/prizes/PrizesContainer";
 import { ClaimPrizesDialog } from "@/components/dialogs/ClaimPrizes";
 import { SubmitScoresDialog } from "@/components/dialogs/SubmitScores";
 import {
-  useGetAccountTokenIds,
   useGetTournaments,
   useGetTournamentsCount,
 } from "@/dojo/hooks/useSqlQueries";
@@ -75,10 +61,12 @@ import { AddPrizesDialog } from "@/components/dialogs/AddPrizes";
 import { Skeleton } from "@/components/ui/skeleton";
 import LoadingPage from "@/containers/LoadingPage";
 import { ChainId } from "@/dojo/setup/networks";
+import { Badge } from "@/components/ui/badge";
+import { SettingsDialog } from "@/components/dialogs/Settings";
+import { useSettings } from "metagame-sdk/sql";
 
 const Tournament = () => {
   const { id } = useParams<{ id: string }>();
-  const { address } = useAccount();
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const { namespace, selectedChainConfig } = useDojo();
@@ -88,9 +76,9 @@ const Tournament = () => {
   const [claimDialogOpen, setClaimDialogOpen] = useState(false);
   const [submitScoresDialogOpen, setSubmitScoresDialogOpen] = useState(false);
   const [addPrizesDialogOpen, setAddPrizesDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tournamentExists, setTournamentExists] = useState(false);
-  const [prevEntryCount, setPrevEntryCount] = useState<number | null>(null);
   const { data: tournamentsCount } = useGetTournamentsCount({
     namespace: namespace,
   });
@@ -132,7 +120,7 @@ const Tournament = () => {
 
   const tournamentModel = state.getEntity(tournamentEntityId)?.models[namespace]
     ?.Tournament as TournamentModel;
-    
+
   const entryCountModel = useModel(
     tournamentEntityId,
     getModelsMapping(namespace).EntryCount
@@ -200,24 +188,10 @@ const Tournament = () => {
   const isMainnet = selectedChainConfig.chainId === ChainId.SN_MAIN;
   const tokens = formatTokens(registeredTokens, isMainnet, isSepolia);
 
-  const { gameNamespace, gameScoreModel, gameScoreAttribute } =
-    useGameEndpoints(tournamentModel?.game_config?.address);
-
   const gameAddress = tournamentModel?.game_config?.address;
   const gameName = gameData.find(
     (game) => game.contract_address === gameAddress
   )?.name;
-
-  // subscribe and fetch game scores
-  useSubscribeScoresQuery(
-    gameNamespace ?? undefined,
-    gameScoreModel ?? undefined
-  );
-  useGetScoresQuery(gameNamespace ?? "", gameScoreModel ?? "");
-
-  useSubscribeGamesQuery({
-    gameNamespace: gameNamespace ?? "",
-  });
 
   const [isOverflowing, setIsOverflowing] = useState(false);
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -382,34 +356,10 @@ const Tournament = () => {
     };
   });
 
-  // get owned game tokens
-
-  const queryAddress = useMemo(() => {
-    if (!address || address === "0x0") return null;
-    return indexAddress(address);
-  }, [address]);
-
-  const queryGameAddress = useMemo(() => {
-    if (!gameAddress || gameAddress === "0x0") return null;
-    return indexAddress(gameAddress);
-  }, [gameAddress]);
-
-  const entryCount = Number(entryCountModel?.count);
-
-  const { data: ownedTokens, refetch: refetchOwnedTokens } =
-    useGetAccountTokenIds(queryAddress, [queryGameAddress ?? "0x0"], true);
-
-  useEffect(() => {
-    if (prevEntryCount !== null && prevEntryCount !== entryCount) {
-      const timer = setTimeout(() => {
-        refetchOwnedTokens();
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-
-    setPrevEntryCount(entryCount);
-  }, [entryCount, prevEntryCount]);
+  const { data: setting } = useSettings({
+    gameAddresses: [gameAddress],
+    settingsIds: [Number(tournamentModel?.game_config?.settings_id)],
+  });
 
   if (loading) {
     return <LoadingPage message={`Loading tournament...`} />;
@@ -436,7 +386,10 @@ const Tournament = () => {
           </span>
           <Tooltip delayDuration={50}>
             <TooltipTrigger asChild>
-              <div className="flex items-center justify-center cursor-pointer">
+              <div
+                className="flex items-center justify-center cursor-pointer"
+                onClick={() => setSettingsDialogOpen(true)}
+              >
                 <TokenGameIcon image={getGameImage(gameAddress)} size={"md"} />
               </div>
             </TooltipTrigger>
@@ -446,9 +399,20 @@ const Tournament = () => {
               sideOffset={5}
               className="bg-black text-neutral border border-brand-muted px-2 py-1 rounded text-sm z-50"
             >
-              {gameName ? feltToString(gameName) : "Unknown"}
+              {gameName ? gameName : "Unknown"}
             </TooltipContent>
           </Tooltip>
+          {setting[0] && (
+            <div
+              className="hidden sm:flex h-10 text-brand flex-row items-center gap-1 w-full border-2 border-brand-muted p-2 bg-black rounded-lg hover:cursor-pointer"
+              onClick={() => setSettingsDialogOpen(true)}
+            >
+              <span className="w-8">
+                <SLIDERS />
+              </span>
+              <span className="hidden sm:block text-xs">{setting[0].name}</span>
+            </div>
+          )}
           <EntryRequirements
             tournamentModel={tournamentModel}
             tournamentsData={tournamentsData}
@@ -468,7 +432,9 @@ const Tournament = () => {
               className="uppercase [&_svg]:w-6 [&_svg]:h-6"
               onClick={() => setEnterDialogOpen(true)}
             >
-              <SPACE_INVADER_SOLID />
+              <span className="hidden sm:block">
+                <SPACE_INVADER_SOLID />
+              </span>
 
               <span>Enter</span>
               <span className="hidden sm:block">|</span>
@@ -530,11 +496,6 @@ const Tournament = () => {
             open={submitScoresDialogOpen}
             onOpenChange={setSubmitScoresDialogOpen}
             tournamentModel={tournamentModel}
-            namespace={namespace}
-            gameNamespace={gameNamespace ?? ""}
-            gameScoreModel={gameScoreModel ?? ""}
-            gameScoreAttribute={gameScoreAttribute ?? ""}
-            gameAddress={tournamentModel?.game_config?.address}
             leaderboard={leaderboardModel}
           />
           <ClaimPrizesDialog
@@ -552,6 +513,12 @@ const Tournament = () => {
             tournamentName={feltToString(tournamentModel?.metadata?.name ?? "")}
             leaderboardSize={leaderboardSize}
           />
+          <SettingsDialog
+            open={settingsDialogOpen}
+            onOpenChange={setSettingsDialogOpen}
+            game={gameAddress}
+            settings={setting[0]}
+          />
         </div>
       </div>
       <div className="flex flex-col gap-5 overflow-y-auto pb-5 sm:pb-0">
@@ -562,17 +529,29 @@ const Tournament = () => {
                 {feltToString(tournamentModel?.metadata?.name ?? "")}
               </span>
               <div className="flex flex-row items-center gap-4 text-brand-muted 3xl:text-lg">
-                <div className="flex flex-row gap-2">
-                  <span className="hidden sm:block">Winners:</span>
+                <div className="flex flex-row gap-2 hidden sm:flex">
+                  <span>Winners:</span>
                   <span className="text-brand">Top {leaderboardSize}</span>
                 </div>
-                <div className="flex flex-row gap-2">
-                  <span className="hidden sm:block">Registration:</span>
+                <Badge
+                  variant="outline"
+                  className="text-xs p-1 rounded-md sm:hidden text-brand"
+                >
+                  {leaderboardSize} Winners
+                </Badge>
+                <div className="flex flex-row gap-2 hidden sm:flex">
+                  <span>Registration:</span>
                   <span className="text-brand">
                     {registrationType.charAt(0).toUpperCase() +
                       registrationType.slice(1)}
                   </span>
                 </div>
+                <Badge
+                  variant="outline"
+                  className="text-xs p-1 rounded-md sm:hidden text-brand"
+                >
+                  Open
+                </Badge>
               </div>
             </div>
             <div className="hidden sm:flex flex-row 3xl:text-lg">
@@ -688,34 +667,16 @@ const Tournament = () => {
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-5">
-            {!isStarted ? (
-              <EntrantsTable
-                tournamentId={tournamentModel?.id}
-                entryCount={entryCountModel ? Number(entryCountModel.count) : 0}
-                gameAddress={tournamentModel?.game_config?.address}
-                gameNamespace={gameNamespace ?? ""}
-              />
-            ) : isStarted ? (
-              <ScoreTable
-                tournamentId={tournamentModel?.id}
-                entryCount={entryCountModel ? Number(entryCountModel.count) : 0}
-                gameAddress={tournamentModel?.game_config?.address}
-                gameNamespace={gameNamespace ?? ""}
-                gameScoreModel={gameScoreModel ?? ""}
-                gameScoreAttribute={gameScoreAttribute ?? ""}
-                isEnded={isEnded}
-                leaderboardModel={leaderboardModel}
-              />
-            ) : (
-              <></>
-            )}
+            <ScoreTable
+              tournamentId={tournamentModel?.id}
+              entryCount={entryCountModel ? Number(entryCountModel.count) : 0}
+              gameAddress={tournamentModel?.game_config?.address}
+              isStarted={isStarted}
+              isEnded={isEnded}
+            />
             <MyEntries
               tournamentId={tournamentModel?.id}
               gameAddress={tournamentModel?.game_config?.address}
-              gameNamespace={gameNamespace ?? ""}
-              gameScoreModel={gameScoreModel ?? ""}
-              gameScoreAttribute={gameScoreAttribute ?? ""}
-              ownedTokens={ownedTokens}
               tournamentModel={tournamentModel}
             />
           </div>

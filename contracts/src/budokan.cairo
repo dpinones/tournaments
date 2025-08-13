@@ -1,93 +1,23 @@
-// SPDX-License-Identifier: BUSL-1.1
-
-use starknet::ContractAddress;
-use tournaments::components::models::tournament::{
-    Tournament as TournamentModel, TokenType, Registration, Prize, PrizeType, Metadata, GameConfig,
-    EntryFee, EntryRequirement, QualificationProof,
-};
-use tournaments::components::models::schedule::{Schedule, Phase};
-
-///
-/// Interface
-///
-
-#[starknet::interface]
-trait ITournament<TState> {
-    fn create_tournament(
-        ref self: TState,
-        creator_rewards_address: ContractAddress,
-        metadata: Metadata,
-        schedule: Schedule,
-        game_config: GameConfig,
-        entry_fee: Option<EntryFee>,
-        entry_requirement: Option<EntryRequirement>,
-    ) -> TournamentModel;
-    fn enter_tournament(
-        ref self: TState,
-        tournament_id: u64,
-        player_name: felt252,
-        player_address: ContractAddress,
-        qualification: Option<QualificationProof>,
-    ) -> (u64, u32);
-    fn submit_score(ref self: TState, tournament_id: u64, token_id: u64, position: u8);
-    fn claim_prize(ref self: TState, tournament_id: u64, prize_type: PrizeType);
-    fn add_prize(
-        ref self: TState,
-        tournament_id: u64,
-        token_address: ContractAddress,
-        token_type: TokenType,
-        position: u8,
-    ) -> u64;
-    fn total_tournaments(self: @TState) -> u64;
-    fn tournament(self: @TState, tournament_id: u64) -> TournamentModel;
-    fn get_registration(
-        self: @TState, game_address: ContractAddress, token_id: u64,
-    ) -> Registration;
-    fn get_prize(self: @TState, prize_id: u64) -> Prize;
-    fn tournament_entries(self: @TState, tournament_id: u64) -> u32;
-    fn is_token_registered(self: @TState, address: ContractAddress) -> bool;
-    fn register_token(ref self: TState, address: ContractAddress, token_type: TokenType);
-    fn get_leaderboard(self: @TState, tournament_id: u64) -> Array<u64>;
-    fn current_phase(self: @TState, tournament_id: u64) -> Phase;
-    fn get_tournament_id_for_token_id(
-        self: @TState, game_address: ContractAddress, token_id: u64,
-    ) -> u64;
-}
-
-///
-/// Tournament Component
-///
-
-#[starknet::component]
-pub mod tournament_component {
-    use super::ITournament;
-
+#[dojo::contract]
+pub mod Budokan {
+    use starknet::{ContractAddress, get_block_timestamp, get_contract_address, get_caller_address};
     use core::num::traits::Zero;
 
-    use tournaments::components::constants::{
+    use budokan::constants::{
         TWO_POW_128, DEFAULT_NS, VERSION, SEPOLIA_CHAIN_ID, GAME_CREATOR_TOKEN_ID,
     };
-    use tournaments::components::interfaces::{
-        IGameTokenDispatcher, IGameTokenDispatcherTrait, IGameDetailsDispatcher,
-        IGameDetailsDispatcherTrait, IGAMETOKEN_ID, IGAME_METADATA_ID,
-    };
-    use tournaments::components::models::tournament::{
+    use budokan::models::budokan::{
         Tournament as TournamentModel, Registration, Leaderboard, Prize, Token, TournamentConfig,
-        TokenType, TournamentType, ERC20Data, ERC721Data, PrizeType, Role, PrizeClaim, Metadata,
-        GameConfig, EntryFee, EntryRequirement, QualificationProof, TournamentQualification,
-        EntryRequirementType,
+        TokenType, TokenTypeData, TournamentType, PrizeType, Role, PrizeClaim, Metadata, GameConfig,
+        EntryFee, EntryRequirement, QualificationProof, TournamentQualification,
+        EntryRequirementType, TokenData,
     };
-    use tournaments::components::models::schedule::{Schedule, Phase};
-    use tournaments::components::interfaces::{WorldTrait, WorldImpl};
-    use tournaments::components::libs::store::{Store, StoreTrait};
-    use tournaments::components::libs::schedule::{
+    use budokan::models::schedule::{Schedule, Phase};
+    use budokan::interfaces::{IBudokan};
+    use budokan::libs::store::{Store, StoreTrait};
+    use budokan::libs::schedule::{
         ScheduleTrait, ScheduleImpl, ScheduleAssertionsTrait, ScheduleAssertionsImpl,
     };
-    use tournaments::components::interfaces::{ISettingsDispatcher, ISettingsDispatcherTrait};
-
-    use dojo::contract::components::world_provider::{IWorldProvider};
-
-    use starknet::{ContractAddress, get_block_timestamp, get_contract_address, get_caller_address};
 
     use openzeppelin_introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
     use openzeppelin_token::erc20::interface::{
@@ -99,99 +29,230 @@ pub mod tournament_component {
         IERC721MetadataDispatcherTrait, IERC721_ID,
     };
 
-    // uses dojo world storage
-    #[storage]
-    pub struct Storage {}
+    use game_components_minigame::interface::{
+        IMinigameDispatcher, IMinigameDispatcherTrait, IMinigameTokenDataDispatcher,
+        IMinigameTokenDataDispatcherTrait, IMINIGAME_ID,
+    };
+    use game_components_minigame::extensions::settings::interface::{
+        IMinigameSettingsDispatcher, IMinigameSettingsDispatcherTrait,
+    };
+    use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
+    use game_components_metagame::metagame::MetagameComponent;
+    use game_components_metagame::extensions::context::interface::IMetagameContext;
+    use game_components_metagame::extensions::context::context::ContextComponent;
+    use game_components_token::core::interface::{
+        IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
+    };
+    use game_components_token::examples::minigame_registry_contract::{
+        IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait,
+    };
 
-    // uses dojo world events
+    use openzeppelin_introspection::src5::SRC5Component;
+
+    // Components needed: metagame requires SRC5
+    component!(path: MetagameComponent, storage: metagame, event: MetagameEvent);
+    component!(path: ContextComponent, storage: context, event: ContextEvent);
+    component!(path: SRC5Component, storage: src5, event: SRC5Event);
+
+    #[abi(embed_v0)]
+    impl MetagameImpl = MetagameComponent::MetagameImpl<ContractState>;
+    impl MetagameInternalImpl = MetagameComponent::InternalImpl<ContractState>;
+
+    impl MetagameInternalContextImpl = ContextComponent::InternalImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl SRC5Impl = SRC5Component::SRC5Impl<ContractState>;
+    impl SRC5InternalImpl = SRC5Component::InternalImpl<ContractState>;
+
+    #[storage]
+    struct Storage {
+        #[substorage(v0)]
+        metagame: MetagameComponent::Storage,
+        #[substorage(v0)]
+        context: ContextComponent::Storage,
+        #[substorage(v0)]
+        src5: SRC5Component::Storage,
+    }
+
     #[event]
     #[derive(Drop, starknet::Event)]
-    pub enum Event {}
+    enum Event {
+        #[flat]
+        MetagameEvent: MetagameComponent::Event,
+        #[flat]
+        ContextEvent: ContextComponent::Event,
+        #[flat]
+        SRC5Event: SRC5Component::Event,
+    }
 
-    #[embeddable_as(TournamentImpl)]
-    impl Tournament<
-        TContractState,
-        +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
-        +Drop<TContractState>,
-    > of ITournament<ComponentState<TContractState>> {
-        fn total_tournaments(self: @ComponentState<TContractState>) -> u64 {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+    fn dojo_init(
+        ref self: ContractState,
+        safe_mode: bool,
+        test_mode: bool,
+        default_token_address: ContractAddress,
+        registered_tokens: Span<TokenData>,
+    ) {
+        // Initialize tournament config
+        let mut world = self.world(@DEFAULT_NS());
+        let mut store: Store = StoreTrait::new(world);
+        store.set_tournament_config(@TournamentConfig { key: VERSION, safe_mode, test_mode });
+
+        // Initialize metagame component
+        self.context.initializer();
+        self.metagame.initializer(Option::Some(get_contract_address()), default_token_address);
+
+        // Initialize registered tokens
+        let mut tokens_index = 0;
+        loop {
+            if tokens_index >= registered_tokens.len() {
+                break;
+            }
+            let token_data = *registered_tokens.at(tokens_index);
+            let token_model = store.get_token(token_data.token_address);
+            self._assert_token_not_registered(token_model);
+            let (name, symbol) = match token_data.token_type {
+                TokenType::erc20 => {
+                    let token_dispatcher_metadata = IERC20MetadataDispatcher {
+                        contract_address: token_data.token_address,
+                    };
+                    (token_dispatcher_metadata.name(), token_dispatcher_metadata.symbol())
+                },
+                TokenType::erc721 => {
+                    let token_dispatcher_metadata = IERC721MetadataDispatcher {
+                        contract_address: token_data.token_address,
+                    };
+                    (token_dispatcher_metadata.name(), token_dispatcher_metadata.symbol())
+                },
+            };
+            let new_token = @Token {
+                address: token_data.token_address,
+                name: name,
+                symbol: symbol,
+                token_type: token_data.token_type,
+                is_registered: true,
+            };
+            store.set_token(new_token);
+            tokens_index += 1;
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl GameContextImpl of IMetagameContext<ContractState> {
+        fn has_context(self: @ContractState, token_id: u64) -> bool {
+            let mut world = self.world(@DEFAULT_NS());
+            let store: Store = StoreTrait::new(world);
+            let minigame_token_dispatcher = IMinigameTokenDispatcher {
+                contract_address: self.default_token_address(),
+            };
+            let game_address = minigame_token_dispatcher.game_address();
+            let registration = store.get_registration(game_address, token_id);
+            registration.tournament_id != 0
+        }
+
+        fn context(self: @ContractState, token_id: u64) -> GameContextDetails {
+            let mut world = self.world(@DEFAULT_NS());
+            let store: Store = StoreTrait::new(world);
+            let minigame_token_dispatcher = IMinigameTokenDispatcher {
+                contract_address: self.default_token_address(),
+            };
+            let game_address = minigame_token_dispatcher.game_address();
+            let registration = store.get_registration(game_address, token_id);
+            let context = array![
+                GameContext {
+                    name: "Tournament ID", value: format!("{}", registration.tournament_id),
+                },
+            ]
+                .span();
+            GameContextDetails {
+                name: "Budokan",
+                description: "The onchain tournament system",
+                id: Option::Some(registration.tournament_id.try_into().unwrap()),
+                context: context,
+            }
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl BudokanImpl of IBudokan<ContractState> {
+        fn total_tournaments(self: @ContractState) -> u64 {
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             store.get_platform_metrics().total_tournaments
         }
-        fn tournament(
-            self: @ComponentState<TContractState>, tournament_id: u64,
-        ) -> TournamentModel {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+        fn tournament(self: @ContractState, tournament_id: u64) -> TournamentModel {
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             store.get_tournament(tournament_id)
         }
         fn get_registration(
-            self: @ComponentState<TContractState>, game_address: ContractAddress, token_id: u64,
+            self: @ContractState, game_address: ContractAddress, token_id: u64,
         ) -> Registration {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             store.get_registration(game_address, token_id)
         }
-        fn tournament_entries(self: @ComponentState<TContractState>, tournament_id: u64) -> u32 {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+        fn tournament_entries(self: @ContractState, tournament_id: u64) -> u32 {
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             store.get_tournament_entry_count(tournament_id).count
         }
 
-        fn is_token_registered(
-            self: @ComponentState<TContractState>, address: ContractAddress,
-        ) -> bool {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+        fn is_token_registered(self: @ContractState, address: ContractAddress) -> bool {
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             let token = store.get_token(address);
             self._is_token_registered(@token)
         }
 
         fn register_token(
-            ref self: ComponentState<TContractState>,
-            address: ContractAddress,
-            token_type: TokenType,
+            ref self: ContractState, address: ContractAddress, token_type: TokenTypeData,
         ) {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
+            let mut world = self.world(@DEFAULT_NS());
             let mut store: Store = StoreTrait::new(world);
             let safe_mode = store.get_tournament_config(VERSION).safe_mode;
             let token_model = store.get_token(address);
             assert!(!safe_mode, "Tournament: Cannot register token as safe mode is enabled");
-            self._assert_token_registered(token_model);
+            self._assert_token_not_registered(token_model);
             let (name, symbol) = self._register_token(address, token_type);
-            let token_model = Token { address, name, symbol, token_type, is_registered: true };
-            store.set_token(@token_model);
+            match token_type {
+                TokenTypeData::erc20(_) => {
+                    let token_model = Token {
+                        address, name, symbol, token_type: TokenType::erc20, is_registered: true,
+                    };
+                    store.set_token(@token_model);
+                },
+                TokenTypeData::erc721(_) => {
+                    let token_model = Token {
+                        address, name, symbol, token_type: TokenType::erc721, is_registered: true,
+                    };
+                    store.set_token(@token_model);
+                },
+            }
         }
 
-        fn get_leaderboard(
-            self: @ComponentState<TContractState>, tournament_id: u64,
-        ) -> Array<u64> {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+        fn get_leaderboard(self: @ContractState, tournament_id: u64) -> Array<u64> {
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             store.get_leaderboard(tournament_id)
         }
 
-        fn current_phase(self: @ComponentState<TContractState>, tournament_id: u64) -> Phase {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+        fn current_phase(self: @ContractState, tournament_id: u64) -> Phase {
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             let tournament = store.get_tournament(tournament_id);
             tournament.schedule.current_phase(get_block_timestamp())
         }
 
         fn get_tournament_id_for_token_id(
-            self: @ComponentState<TContractState>, game_address: ContractAddress, token_id: u64,
+            self: @ContractState, game_address: ContractAddress, token_id: u64,
         ) -> u64 {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             store.get_registration(game_address, token_id).tournament_id
         }
 
-        fn get_prize(self: @ComponentState<TContractState>, prize_id: u64) -> Prize {
-            let world = WorldTrait::storage(self.get_contract().world_dispatcher(), @DEFAULT_NS());
+        fn get_prize(self: @ContractState, prize_id: u64) -> Prize {
+            let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             store.get_prize(prize_id)
         }
@@ -205,9 +266,10 @@ pub mod tournament_component {
         /// @param game_config the tournament game configuration.
         /// @param entry_fee and optional entry fee for the tournament.
         /// @param entry_requirement and optional entry requirement.
+        /// @param denshokan_address the address of the denshokan contract.
         /// @return A tuple containing the tournament and the creator's game token id.
         fn create_tournament(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             creator_rewards_address: ContractAddress,
             metadata: Metadata,
             schedule: Schedule,
@@ -215,9 +277,7 @@ pub mod tournament_component {
             entry_fee: Option<EntryFee>,
             entry_requirement: Option<EntryRequirement>,
         ) -> TournamentModel {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
+            let mut world = self.world(@DEFAULT_NS());
             let mut store: Store = StoreTrait::new(world);
 
             schedule.assert_is_valid();
@@ -231,14 +291,22 @@ pub mod tournament_component {
                 self._assert_valid_entry_requirement(store, entry_requirement);
             }
 
+            let empty_objective_ids: Span<u32> = array![].span();
+
             // mint a game to the tournament creator for reward distribution
             let creator_token_id = self
                 ._mint_game(
                     game_config.address,
-                    game_config.settings_id,
-                    schedule,
-                    metadata.name,
+                    Option::Some("Tournament Creator"),
+                    Option::Some(game_config.settings_id),
+                    Option::Some(schedule.game.start),
+                    Option::Some(schedule.game.end),
+                    Option::Some(empty_objective_ids),
+                    Option::None, // creator token, so we don't want to give it context
+                    Option::None, // client_url
+                    Option::None, // renderer_address
                     creator_rewards_address,
+                    false,
                 );
 
             store
@@ -257,15 +325,13 @@ pub mod tournament_component {
         /// qualifying token.
         /// @return A tuple containing the tournament token id and the entry number.
         fn enter_tournament(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             tournament_id: u64,
-            player_name: felt252,
+            player_name: ByteArray,
             player_address: ContractAddress,
             qualification: Option<QualificationProof>,
         ) -> (u64, u32) {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
+            let mut world = self.world(@DEFAULT_NS());
 
             let mut store: Store = StoreTrait::new(world);
 
@@ -291,14 +357,23 @@ pub mod tournament_component {
                 self._process_entry_fee(entry_fee);
             }
 
+            let empty_objective_ids: Span<u32> = array![].span();
+            let context = self._create_context(tournament_id);
+
             // mint game to the determined recipient
             let game_token_id = self
                 ._mint_game(
                     tournament.game_config.address,
-                    tournament.game_config.settings_id,
-                    tournament.schedule,
-                    player_name,
-                    mint_to_address,
+                    Option::Some(player_name),
+                    Option::Some(tournament.game_config.settings_id),
+                    Option::Some(tournament.schedule.game.start),
+                    Option::Some(tournament.schedule.game.end),
+                    Option::Some(empty_objective_ids),
+                    Option::Some(context),
+                    Option::None, // client_url
+                    Option::None, // renderer_address
+                    mint_to_address, // to
+                    false // soulbound
                 );
 
             let entry_number = store.increment_and_get_tournament_entry_count(tournament_id);
@@ -331,15 +406,8 @@ pub mod tournament_component {
         /// @param tournament_id A u64 representing the unique ID of the tournament.
         /// @param token_id A u64 representing the unique ID of the game token.
         /// @param position A u8 representing the position on the leaderboard.
-        fn submit_score(
-            ref self: ComponentState<TContractState>,
-            tournament_id: u64,
-            token_id: u64,
-            position: u8,
-        ) {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
+        fn submit_score(ref self: ContractState, tournament_id: u64, token_id: u64, position: u8) {
+            let mut world = self.world(@DEFAULT_NS());
             let mut store: Store = StoreTrait::new(world);
 
             // assert tournament exists
@@ -384,12 +452,8 @@ pub mod tournament_component {
         /// @param self A reference to the ContractState object.
         /// @param tournament_id A u64 representing the unique ID of the tournament.
         /// @param prize_type A PrizeType representing the type of prize to claim.
-        fn claim_prize(
-            ref self: ComponentState<TContractState>, tournament_id: u64, prize_type: PrizeType,
-        ) {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
+        fn claim_prize(ref self: ContractState, tournament_id: u64, prize_type: PrizeType) {
+            let mut world = self.world(@DEFAULT_NS());
             let mut store: Store = StoreTrait::new(world);
             let tournament = store.get_tournament(tournament_id);
 
@@ -421,15 +485,13 @@ pub mod tournament_component {
         /// @param position A u8 representing the scoreboard position to distribute the prize to.
         /// @return A u64 representing the unique ID of the prize.
         fn add_prize(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             tournament_id: u64,
             token_address: ContractAddress,
-            token_type: TokenType,
+            token_type: TokenTypeData,
             position: u8,
         ) -> u64 {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
+            let mut world = self.world(@DEFAULT_NS());
             let mut store: Store = StoreTrait::new(world);
             let mut tournament = store.get_tournament(tournament_id);
 
@@ -464,111 +526,28 @@ pub mod tournament_component {
 
 
     #[generate_trait]
-    pub impl InternalImpl<
-        TContractState,
-        +HasComponent<TContractState>,
-        +IWorldProvider<TContractState>,
-        +Drop<TContractState>,
-    > of InternalTrait<TContractState> {
-        //
-        // INITIALIZE COMPONENT
-        //
-
-        /// @title Initialize tournament
-        /// @notice Initializes the tournament component for storing its config.
-        /// @param self A copy to the ContractState object.
-        /// @param name A byte array representing the name of the tournament.
-        /// @param symbol A byte array representing the symbol of the tournament.
-        /// @param base_uri A byte array representing the base uri of the tournament.
-        /// @param safe_mode A bool representing whether to use safe mode.
-        /// @param test_mode A bool representing whether to use test mode.
-        fn initialize(ref self: ComponentState<TContractState>, safe_mode: bool, test_mode: bool) {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
-            let mut store: Store = StoreTrait::new(world);
-            // Store the config
-            store.set_tournament_config(@TournamentConfig { key: VERSION, safe_mode, test_mode });
-        }
-
-        //
-        // INITIALIZE TOKENS
-        //
-
-        /// @title Initialize erc20
-        /// @notice Initializes an erc20 token for registration.
-        /// @param self A copy to the ContractState object.
-        /// @param token A contract address representing the token.
-        /// @param name A byte array representing the name of the token.
-        /// @param symbol A byte array representing the symbol of the token.
-        fn initialize_erc20(
-            self: @ComponentState<TContractState>,
-            address: ContractAddress,
-            name: ByteArray,
-            symbol: ByteArray,
-        ) {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
-            let mut store: Store = StoreTrait::new(world);
-
-            let token_model = store.get_token(address);
-            self._assert_token_registered(token_model);
-
-            let token_type = TokenType::erc20(ERC20Data { amount: 1 });
-            let new_erc20_token = @Token { address, name, symbol, token_type, is_registered: true };
-            store.set_token(new_erc20_token);
-        }
-
-        /// @title Initialize erc721
-        /// @notice Initializes an erc721 token for registration.
-        /// @param self A copy to the ContractState object.
-        /// @param token A contract address representing the token.
-        /// @param name A byte array representing the name of the token.
-        /// @param symbol A byte array representing the symbol of the token.
-        fn initialize_erc721(
-            self: @ComponentState<TContractState>,
-            address: ContractAddress,
-            name: ByteArray,
-            symbol: ByteArray,
-        ) {
-            let mut world = WorldTrait::storage(
-                self.get_contract().world_dispatcher(), @DEFAULT_NS(),
-            );
-            let mut store: Store = StoreTrait::new(world);
-            let token_model = store.get_token(address);
-            self._assert_token_registered(token_model);
-
-            let token_type = TokenType::erc721(ERC721Data { id: 1 });
-            let new_erc721_token = @Token {
-                address, name, symbol, token_type, is_registered: true,
-            };
-            store.set_token(new_erc721_token);
-        }
-
+    pub impl InternalImpl of InternalTrait {
         //
         // GETTERS
         //
 
         #[inline(always)]
         fn get_score_for_token_id(
-            self: @ComponentState<TContractState>, contract_address: ContractAddress, token_id: u64,
+            self: @ContractState, contract_address: ContractAddress, token_id: u64,
         ) -> u32 {
-            let game_dispatcher = IGameDetailsDispatcher { contract_address };
+            let game_dispatcher = IMinigameTokenDataDispatcher { contract_address };
             game_dispatcher.score(token_id)
         }
 
         #[inline(always)]
         fn _get_owner(
-            self: @ComponentState<TContractState>,
-            contract_address: ContractAddress,
-            token_id: u256,
+            self: @ContractState, contract_address: ContractAddress, token_id: u256,
         ) -> ContractAddress {
             IERC721Dispatcher { contract_address }.owner_of(token_id)
         }
 
         #[inline(always)]
-        fn _is_token_registered(self: @ComponentState<TContractState>, token: @Token) -> bool {
+        fn _is_token_registered(self: @ContractState, token: @Token) -> bool {
             let chain_id = starknet::get_tx_info().unbox().chain_id;
             if chain_id == SEPOLIA_CHAIN_ID {
                 true
@@ -581,10 +560,7 @@ pub mod tournament_component {
         // greater than the last place score. This is safe because we have already verified the
         // score was submitted
         fn _is_top_score(
-            self: @ComponentState<TContractState>,
-            game_address: ContractAddress,
-            leaderboard: Span<u64>,
-            score: u32,
+            self: @ContractState, game_address: ContractAddress, leaderboard: Span<u64>, score: u32,
         ) -> bool {
             let num_scores = leaderboard.len();
 
@@ -605,7 +581,7 @@ pub mod tournament_component {
         //
 
         #[inline(always)]
-        fn _assert_token_registered(self: @ComponentState<TContractState>, token: Token) {
+        fn _assert_token_not_registered(self: @ContractState, token: Token) {
             let token_address: felt252 = token.address.into();
             assert!(
                 !self._is_token_registered(@token),
@@ -616,48 +592,38 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_valid_entry_requirement(
-            self: @ComponentState<TContractState>,
-            store: Store,
-            entry_requirement: EntryRequirement,
+            self: @ContractState, store: Store, entry_requirement: EntryRequirement,
         ) {
             self._assert_gated_type_validates(store, entry_requirement);
         }
 
         #[inline(always)]
         fn _assert_valid_entry_fee(
-            self: @ComponentState<TContractState>,
-            store: Store,
-            entry_fee: EntryFee,
-            prize_spots: u8,
+            self: @ContractState, store: Store, entry_fee: EntryFee, prize_spots: u8,
         ) {
             self._assert_entry_fee_token_registered(@store.get_token(entry_fee.token_address));
             self._assert_valid_payout_distribution(entry_fee, prize_spots);
         }
 
         #[inline(always)]
-        fn _assert_valid_game_config(
-            self: @ComponentState<TContractState>, game_config: GameConfig,
-        ) {
+        fn _assert_valid_game_config(ref self: ContractState, game_config: GameConfig) {
             let contract_address = game_config.address;
+            let src5_dispatcher = ISRC5Dispatcher { contract_address };
+            self._assert_supports_game_interface(src5_dispatcher, contract_address);
 
             self._assert_winners_count_greater_than_zero(game_config.prize_spots);
             self._assert_settings_exists(contract_address, game_config.settings_id);
 
-            let src5_dispatcher = ISRC5Dispatcher { contract_address };
-            self._assert_supports_game_interface(src5_dispatcher, contract_address);
-            self._assert_supports_game_metadata_interface(src5_dispatcher, contract_address);
-            self._assert_game_supports_erc721_interface(src5_dispatcher, contract_address);
+            self.metagame.assert_game_registered(contract_address);
         }
 
         #[inline(always)]
-        fn _assert_winners_count_greater_than_zero(
-            self: @ComponentState<TContractState>, prize_spots: u8,
-        ) {
+        fn _assert_winners_count_greater_than_zero(self: @ContractState, prize_spots: u8) {
             assert!(prize_spots > 0, "Tournament: Winners count must be greater than zero");
         }
 
         fn _assert_valid_payout_distribution(
-            self: @ComponentState<TContractState>, entry_fee: EntryFee, prize_spots: u8,
+            self: @ContractState, entry_fee: EntryFee, prize_spots: u8,
         ) {
             // verify distribution length matches prize spots
             self
@@ -694,52 +660,36 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_supports_game_interface(
-            self: @ComponentState<TContractState>,
-            src5_dispatcher: ISRC5Dispatcher,
-            address: ContractAddress,
+            self: @ContractState, src5_dispatcher: ISRC5Dispatcher, address: ContractAddress,
         ) {
             let address: felt252 = address.into();
             assert!(
-                src5_dispatcher.supports_interface(IGAMETOKEN_ID),
+                src5_dispatcher.supports_interface(IMINIGAME_ID),
                 "Tournament: Game address {} does not support IGame interface",
                 address,
             );
         }
 
         #[inline(always)]
-        fn _assert_supports_game_metadata_interface(
-            self: @ComponentState<TContractState>,
-            src5_dispatcher: ISRC5Dispatcher,
-            address: ContractAddress,
+        fn _assert_supports_erc721(
+            self: @ContractState, src5_dispatcher: ISRC5Dispatcher, address: ContractAddress,
         ) {
-            let address_felt: felt252 = address.into();
-            assert!(
-                src5_dispatcher.supports_interface(IGAME_METADATA_ID),
-                "Tournament: Game address {} does not support IGameMetadata interface",
-                address_felt,
-            );
-        }
-
-        #[inline(always)]
-        fn _assert_game_supports_erc721_interface(
-            self: @ComponentState<TContractState>,
-            src5_dispatcher: ISRC5Dispatcher,
-            address: ContractAddress,
-        ) {
-            let address_felt: felt252 = address.into();
+            let address: felt252 = address.into();
             assert!(
                 src5_dispatcher.supports_interface(IERC721_ID),
-                "Tournament: Game address {} does not support IERC721 interface",
-                address_felt,
+                "Tournament: Game token address {} does not support IERC721 interface",
+                address,
             );
         }
 
         #[inline(always)]
-        fn _assert_settings_exists(
-            self: @ComponentState<TContractState>, game: ContractAddress, settings_id: u32,
-        ) {
-            let settings_dispatcher = ISettingsDispatcher { contract_address: game };
-            let settings_exist = settings_dispatcher.setting_exists(settings_id);
+        fn _assert_settings_exists(self: @ContractState, game: ContractAddress, settings_id: u32) {
+            let minigame_dispatcher = IMinigameDispatcher { contract_address: game };
+            let settings_address = minigame_dispatcher.settings_address();
+            let settings_dispatcher = IMinigameSettingsDispatcher {
+                contract_address: settings_address,
+            };
+            let settings_exist = settings_dispatcher.settings_exist(settings_id);
             let game_address: felt252 = game.into();
             assert!(
                 settings_exist,
@@ -750,9 +700,7 @@ pub mod tournament_component {
         }
 
         #[inline(always)]
-        fn _assert_entry_fee_token_registered(
-            self: @ComponentState<TContractState>, token: @Token,
-        ) {
+        fn _assert_entry_fee_token_registered(self: @ContractState, token: @Token) {
             assert!(
                 self._is_token_registered(token), "Tournament: Entry fee token is not registered",
             );
@@ -760,7 +708,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_entry_fee_token_distribution_length_not_too_long(
-            self: @ComponentState<TContractState>, distribution_length: u32, prize_spots: u32,
+            self: @ContractState, distribution_length: u32, prize_spots: u32,
         ) {
             assert!(
                 distribution_length <= prize_spots,
@@ -772,7 +720,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_entry_fee_token_distribution_sum_is_100(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             player_percentage: u8,
             tournament_creator_share: u8,
             game_creator_share: u8,
@@ -787,15 +735,13 @@ pub mod tournament_component {
         }
 
         #[inline(always)]
-        fn _assert_prize_token_registered(self: @ComponentState<TContractState>, token: @Token) {
+        fn _assert_prize_token_registered(self: @ContractState, token: @Token) {
             assert!(self._is_token_registered(token), "Tournament: Prize token is not registered");
         }
 
 
         #[inline(always)]
-        fn _assert_scores_count_valid(
-            self: @ComponentState<TContractState>, prize_spots: u8, scores_count: u32,
-        ) {
+        fn _assert_scores_count_valid(self: @ContractState, prize_spots: u8, scores_count: u32) {
             assert!(
                 scores_count <= prize_spots.into(),
                 "Tournament: The length of scores submissions {} is greater than the winners count {}",
@@ -805,9 +751,7 @@ pub mod tournament_component {
         }
 
         #[inline(always)]
-        fn _assert_position_on_leaderboard(
-            self: @ComponentState<TContractState>, prize_spots: u8, position: u8,
-        ) {
+        fn _assert_position_on_leaderboard(self: @ContractState, prize_spots: u8, position: u8) {
             assert!(
                 position <= prize_spots,
                 "Tournament: Prize position {} is greater than the winners count {}",
@@ -817,18 +761,13 @@ pub mod tournament_component {
         }
 
         #[inline(always)]
-        fn _assert_prize_exists(
-            self: @ComponentState<TContractState>, token: ContractAddress, id: u64,
-        ) {
+        fn _assert_prize_exists(self: @ContractState, token: ContractAddress, id: u64) {
             assert!(!token.is_zero(), "Tournament: Prize key {} does not exist", id);
         }
 
         #[inline(always)]
         fn _assert_prize_not_claimed(
-            self: @ComponentState<TContractState>,
-            store: Store,
-            tournament_id: u64,
-            prize_type: PrizeType,
+            self: @ContractState, store: Store, tournament_id: u64, prize_type: PrizeType,
         ) {
             let prize_claim = store.get_prize_claim(tournament_id, prize_type);
             assert!(!prize_claim.claimed, "Tournament: Prize has already been claimed");
@@ -836,7 +775,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_payout_is_top_score(
-            self: @ComponentState<TContractState>, payout_position: u8, winner_token_ids: Span<u64>,
+            self: @ContractState, payout_position: u8, winner_token_ids: Span<u64>,
         ) {
             assert!(
                 payout_position.into() <= winner_token_ids.len(),
@@ -847,7 +786,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_payout_is_not_top_score(
-            self: @ComponentState<TContractState>, payout_position: u8, winner_token_ids: Span<u64>,
+            self: @ContractState, payout_position: u8, winner_token_ids: Span<u64>,
         ) {
             assert!(
                 payout_position.into() > winner_token_ids.len(),
@@ -859,10 +798,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_under_entry_limit(
-            self: @ComponentState<TContractState>,
-            tournament_id: u64,
-            current_entries: u8,
-            entry_limit: u8,
+            self: @ContractState, tournament_id: u64, current_entries: u8, entry_limit: u8,
         ) {
             assert!(
                 current_entries < entry_limit,
@@ -873,9 +809,7 @@ pub mod tournament_component {
 
 
         fn _assert_gated_type_validates(
-            self: @ComponentState<TContractState>,
-            store: Store,
-            entry_requirement: EntryRequirement,
+            self: @ContractState, store: Store, entry_requirement: EntryRequirement,
         ) {
             match entry_requirement.entry_requirement_type {
                 EntryRequirementType::token(token) => {
@@ -916,9 +850,7 @@ pub mod tournament_component {
         }
 
 
-        fn _assert_tournament_exists(
-            self: @ComponentState<TContractState>, store: Store, tournament_id: u64,
-        ) {
+        fn _assert_tournament_exists(self: @ContractState, store: Store, tournament_id: u64) {
             assert!(
                 tournament_id <= store.get_tournament_count(),
                 "Tournament: Tournament {} does not exist",
@@ -928,9 +860,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _validate_tournament_eligibility(
-            self: @ComponentState<TContractState>,
-            tournament_type: TournamentType,
-            tournament_id: u64,
+            self: @ContractState, tournament_type: TournamentType, tournament_id: u64,
         ) {
             let (qualifying_tournaments, _) = match tournament_type {
                 TournamentType::winners(tournaments) => (tournaments, true),
@@ -944,7 +874,7 @@ pub mod tournament_component {
         }
 
         fn _validate_position_requirements(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             leaderboard: Span<u64>,
             tournament_type: TournamentType,
             qualification: TournamentQualification,
@@ -972,10 +902,7 @@ pub mod tournament_component {
         }
 
         fn _has_qualified_in_tournaments(
-            self: @ComponentState<TContractState>,
-            store: Store,
-            tournament_type: TournamentType,
-            token_id: u64,
+            self: @ContractState, store: Store, tournament_type: TournamentType, token_id: u64,
         ) -> bool {
             let (tournament_ids, requires_top_score) = match tournament_type {
                 TournamentType::winners(ids) => (ids, true),
@@ -995,7 +922,9 @@ pub mod tournament_component {
                 let game_address = tournament.game_config.address;
                 let leaderboard = store.get_leaderboard(tournament_id);
                 let registration = store.get_registration(game_address, token_id);
-                let owner = self._get_owner(game_address, token_id.into());
+                let game_token_address = IMinigameDispatcher { contract_address: game_address }
+                    .token_address();
+                let owner = self._get_owner(game_token_address, token_id.into());
 
                 if owner == get_caller_address()
                     && registration.tournament_id == tournament.id
@@ -1021,10 +950,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _assert_has_qualified_in_tournaments(
-            self: @ComponentState<TContractState>,
-            store: Store,
-            tournament_type: TournamentType,
-            token_id: u64,
+            self: @ContractState, store: Store, tournament_type: TournamentType, token_id: u64,
         ) {
             assert!(
                 self._has_qualified_in_tournaments(store, tournament_type, token_id),
@@ -1035,9 +961,7 @@ pub mod tournament_component {
 
 
         #[inline(always)]
-        fn _assert_position_is_valid(
-            self: @ComponentState<TContractState>, position: u8, winner_count: u32,
-        ) {
+        fn _assert_position_is_valid(self: @ContractState, position: u8, winner_count: u32) {
             assert!(
                 position > 0 && position.into() <= winner_count, "Tournament: Invalid position",
             );
@@ -1049,13 +973,13 @@ pub mod tournament_component {
 
         // TODO: add for V2 (only ERC721 tokens)
         fn _register_token(
-            ref self: ComponentState<TContractState>, token: ContractAddress, token_data: TokenType,
+            ref self: ContractState, token: ContractAddress, token_data: TokenTypeData,
         ) -> (ByteArray, ByteArray) {
             let mut name = "";
             let mut symbol = "";
 
             match token_data {
-                TokenType::erc20(_) => {
+                TokenTypeData::erc20(_) => {
                     let token_dispatcher = IERC20Dispatcher { contract_address: token };
                     let token_dispatcher_metadata = IERC20MetadataDispatcher {
                         contract_address: token,
@@ -1093,7 +1017,7 @@ pub mod tournament_component {
                         token_address,
                     );
                 },
-                TokenType::erc721(erc721_token) => {
+                TokenTypeData::erc721(erc721_token) => {
                     let token_dispatcher = IERC721Dispatcher { contract_address: token };
                     let token_dispatcher_metadata = IERC721MetadataDispatcher {
                         contract_address: token,
@@ -1139,32 +1063,52 @@ pub mod tournament_component {
         /// @title mint_game
         /// @notice Mints a new game token to the provided player address.
         /// @param game_address The address of the game contract.
-        /// @param settings_id The id of the game settings.
-        /// @param game_schedule The schedule of the game.
         /// @param player_name The name of the player.
-        /// @param to_address The address to mint the game token to.
+        /// @param settings_id The id of the game settings.
+        /// @param start The start time of the game.
+        /// @param end The end time of the game.
+        /// @param objective_ids The ids of the objectives.
+        /// @param context The context of the game.
+        /// @param client_url The client url of the game.
+        /// @param renderer_address The address of the renderer.
+        /// @param to The address to mint the game token to.
+        /// @param soulbound Whether the game token is soulbound.
+        /// @param use_denshokan Whether the game is using denshokan.
         /// @return The game token id.
         fn _mint_game(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             game_address: ContractAddress,
-            settings_id: u32,
-            game_schedule: Schedule,
-            player_name: felt252,
-            to_address: ContractAddress,
+            player_name: Option<ByteArray>,
+            settings_id: Option<u32>,
+            start: Option<u64>,
+            end: Option<u64>,
+            objective_ids: Option<Span<u32>>,
+            context: Option<GameContextDetails>,
+            client_url: Option<ByteArray>,
+            renderer_address: Option<ContractAddress>,
+            to: ContractAddress,
+            soulbound: bool,
         ) -> u64 {
-            let game_dispatcher = IGameTokenDispatcher { contract_address: game_address };
-            game_dispatcher
+            let game_dispatcher = IMinigameDispatcher { contract_address: game_address };
+            let game_token_address = game_dispatcher.token_address();
+            IMinigameTokenDispatcher { contract_address: game_token_address }
                 .mint(
+                    Option::Some(game_address),
                     player_name,
                     settings_id,
-                    Option::Some(game_schedule.game.start),
-                    Option::Some(game_schedule.game.end),
-                    to_address,
+                    start,
+                    end,
+                    objective_ids,
+                    context,
+                    client_url,
+                    renderer_address,
+                    to,
+                    soulbound,
                 )
         }
 
         #[inline(always)]
-        fn _process_entry_fee(ref self: ComponentState<TContractState>, entry_fee: EntryFee) {
+        fn _process_entry_fee(ref self: ContractState, entry_fee: EntryFee) {
             let erc20_dispatcher = IERC20Dispatcher { contract_address: entry_fee.token_address };
             erc20_dispatcher
                 .transfer_from(
@@ -1173,14 +1117,14 @@ pub mod tournament_component {
         }
 
         fn _deposit_prize(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             tournament_id: u64,
             token: ContractAddress,
-            token_type: TokenType,
+            token_type: TokenTypeData,
             position: u8,
         ) {
             match token_type {
-                TokenType::erc20(erc20_token) => {
+                TokenTypeData::erc20(erc20_token) => {
                     let token_dispatcher = IERC20Dispatcher { contract_address: token };
                     assert!(
                         erc20_token.amount > 0,
@@ -1191,7 +1135,7 @@ pub mod tournament_component {
                             get_caller_address(), get_contract_address(), erc20_token.amount.into(),
                         );
                 },
-                TokenType::erc721(erc721_token) => {
+                TokenTypeData::erc721(erc721_token) => {
                     let token_dispatcher = IERC721Dispatcher { contract_address: token };
                     token_dispatcher
                         .transfer_from(
@@ -1202,15 +1146,13 @@ pub mod tournament_component {
         }
 
         #[inline(always)]
-        fn _calculate_payout(
-            ref self: ComponentState<TContractState>, bp: u128, total_value: u128,
-        ) -> u128 {
+        fn _calculate_payout(ref self: ContractState, bp: u128, total_value: u128) -> u128 {
             (bp * total_value) / 100
         }
 
         #[inline(always)]
         fn _get_game_creator_address(
-            self: @ComponentState<TContractState>, game_address: ContractAddress,
+            self: @ContractState, game_address: ContractAddress,
         ) -> ContractAddress {
             // Game creator is the owner of token ID 0
             let game_dispatcher = IERC721Dispatcher { contract_address: game_address };
@@ -1218,7 +1160,7 @@ pub mod tournament_component {
         }
 
         fn _claim_entry_fees(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             store: Store,
             tournament_id: u64,
             tournament: TournamentModel,
@@ -1261,35 +1203,46 @@ pub mod tournament_component {
 
                 let prize_amount = self._calculate_payout(share.into(), total_pool);
 
+                let game_dispatcher = IMinigameDispatcher {
+                    contract_address: tournament.game_config.address,
+                };
+                let game_token_address = game_dispatcher.token_address();
+
                 // Get recipient address
                 let recipient_address = match role {
                     Role::TournamentCreator => {
                         // tournament creator is owner of the tournament creator token
-                        self
-                            ._get_owner(
-                                tournament.game_config.address, tournament.creator_token_id.into(),
-                            )
+                        self._get_owner(game_token_address, tournament.creator_token_id.into())
                     },
                     Role::GameCreator => {
-                        // game creator is owner of token id 0 of the game contract
-                        self
-                            ._get_owner(
-                                tournament.game_config.address, GAME_CREATOR_TOKEN_ID.into(),
-                            )
+                        // Check if the game token has a minigame registry
+                        let game_token_dispatcher = IMinigameTokenDispatcher {
+                            contract_address: game_token_address,
+                        };
+                        let minigame_registry_address = game_token_dispatcher
+                            .game_registry_address();
+                        let minigame_registry = IMinigameRegistryDispatcher {
+                            contract_address: minigame_registry_address,
+                        };
+                        // If it has a registry, get the owner of the game creator token
+                        if !minigame_registry_address.is_zero() {
+                            let game_id = minigame_registry
+                                .game_id_from_address(tournament.game_config.address);
+                            self._get_owner(minigame_registry_address, game_id.into())
+                        } else {
+                            // Otherwise, the game creator is the owner of token ID 0
+                            self._get_owner(game_token_address, GAME_CREATOR_TOKEN_ID.into())
+                        }
                     },
                     Role::Position(position) => {
                         let leaderboard = store.get_leaderboard(tournament_id);
                         // Check if leaderboard has enough entries for the position
                         if position.into() <= leaderboard.len() {
                             let winner_token_id = *leaderboard.at(position.into() - 1);
-                            self._get_owner(tournament.game_config.address, winner_token_id.into())
+                            self._get_owner(game_token_address, winner_token_id.into())
                         } else {
                             // No entry at this position, default to tournament creator
-                            self
-                                ._get_owner(
-                                    tournament.game_config.address,
-                                    tournament.creator_token_id.into(),
-                                )
+                            self._get_owner(game_token_address, tournament.creator_token_id.into())
                         }
                     },
                 };
@@ -1306,7 +1259,7 @@ pub mod tournament_component {
         }
 
         fn _claim_sponsored_prize(
-            ref self: ComponentState<TContractState>,
+            ref self: ContractState,
             store: Store,
             tournament_id: u64,
             tournament: TournamentModel,
@@ -1329,22 +1282,27 @@ pub mod tournament_component {
                     prize.payout_position, tournament.game_config.prize_spots.into(),
                 );
 
+            let game_dispatcher = IMinigameDispatcher {
+                contract_address: tournament.game_config.address,
+            };
+            let game_token_address = game_dispatcher.token_address();
+
             // Check if leaderboard has enough entries for the position
             let recipient_address = if prize.payout_position.into() <= leaderboard.len() {
                 let winner_token_id = *leaderboard.at(prize.payout_position.into() - 1);
-                self._get_owner(tournament.game_config.address, winner_token_id.into())
+                self._get_owner(game_token_address, winner_token_id.into())
             } else {
                 // No entry at this position, default to tournament creator
-                self._get_owner(tournament.game_config.address, tournament.creator_token_id.into())
+                self._get_owner(game_token_address, tournament.creator_token_id.into())
             };
 
             // Transfer prize
             match prize.token_type {
-                TokenType::erc20(erc20_token) => {
+                TokenTypeData::erc20(erc20_token) => {
                     let erc20 = IERC20Dispatcher { contract_address: prize.token_address };
                     erc20.transfer(recipient_address, erc20_token.amount.into());
                 },
-                TokenType::erc721(erc721_token) => {
+                TokenTypeData::erc721(erc721_token) => {
                     let erc721 = IERC721Dispatcher { contract_address: prize.token_address };
                     erc721
                         .transfer_from(
@@ -1355,7 +1313,7 @@ pub mod tournament_component {
         }
 
         fn _validate_score_submission(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             tournament: @TournamentModel,
             registration: @Registration,
             current_leaderboard: Span<u64>,
@@ -1392,7 +1350,7 @@ pub mod tournament_component {
                 "Tournament: Must submit for next available position",
             );
 
-            let game_dispatcher = IGameDetailsDispatcher {
+            let game_dispatcher = IMinigameTokenDataDispatcher {
                 contract_address: *tournament.game_config.address,
             };
 
@@ -1447,7 +1405,7 @@ pub mod tournament_component {
         }
 
         fn _update_leaderboard(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             tournament: @TournamentModel,
             token_id: u64,
             position: u8,
@@ -1476,7 +1434,7 @@ pub mod tournament_component {
         }
 
         fn _append_to_leaderboard(
-            self: @ComponentState<TContractState>, token_id: u64, current_leaderboard: Span<u64>,
+            self: @ContractState, token_id: u64, current_leaderboard: Span<u64>,
         ) -> Span<u64> {
             let mut new_leaderboard: Array<u64> = current_leaderboard.into();
             new_leaderboard.append(token_id);
@@ -1484,7 +1442,7 @@ pub mod tournament_component {
         }
 
         fn _insert_into_leaderboard(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             token_id: u64,
             position_index: u32,
             ref current_leaderboard: Array<u64>,
@@ -1519,10 +1477,7 @@ pub mod tournament_component {
         }
 
         fn _mark_score_submitted(
-            ref self: ComponentState<TContractState>,
-            ref store: Store,
-            tournament_id: u64,
-            token_id: u64,
+            ref self: ContractState, ref store: Store, tournament_id: u64, token_id: u64,
         ) {
             let game_address = store.get_tournament(tournament_id).game_config.address;
             let mut registration = store.get_registration(game_address, token_id);
@@ -1531,7 +1486,7 @@ pub mod tournament_component {
         }
 
         fn _process_entry_requirement(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             ref store: Store,
             tournament_id: u64,
             entry_requirement: EntryRequirement,
@@ -1567,7 +1522,7 @@ pub mod tournament_component {
         }
 
         fn _update_qualification_entries(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             ref store: Store,
             tournament_id: u64,
             qualifier: QualificationProof,
@@ -1587,7 +1542,7 @@ pub mod tournament_component {
         }
 
         fn _validate_entry_requirement(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             store: Store,
             tournament_id: u64,
             entry_requirement: EntryRequirement,
@@ -1611,7 +1566,7 @@ pub mod tournament_component {
         }
 
         fn _validate_tournament_qualification(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             store: Store,
             tournament_id: u64,
             tournament_type: TournamentType,
@@ -1642,18 +1597,22 @@ pub mod tournament_component {
                     leaderboard.span(), tournament_type, qualifying_proof_tournament,
                 );
 
+            let tournament = store.get_tournament(tournament_id);
+
+            let game_dispatcher = IMinigameDispatcher {
+                contract_address: tournament.game_config.address,
+            };
+            let game_token_address = game_dispatcher.token_address();
+
             // Return the owner of the qualifying token
             let token_owner = self
-                ._get_owner(
-                    qualifying_tournament.game_config.address,
-                    qualifying_proof_tournament.token_id.into(),
-                );
+                ._get_owner(game_token_address, qualifying_proof_tournament.token_id.into());
 
             token_owner
         }
 
         fn _validate_nft_qualification(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             token_address: ContractAddress,
             player_address: ContractAddress,
             qualifier: QualificationProof,
@@ -1671,9 +1630,7 @@ pub mod tournament_component {
         }
 
         fn _is_qualifying_tournament(
-            self: @ComponentState<TContractState>,
-            qualifying_tournaments: Span<u64>,
-            tournament_id: u64,
+            self: @ContractState, qualifying_tournaments: Span<u64>, tournament_id: u64,
         ) -> bool {
             let mut i = 0;
             loop {
@@ -1689,7 +1646,7 @@ pub mod tournament_component {
 
         #[inline(always)]
         fn _validate_allowlist_qualification(
-            self: @ComponentState<TContractState>,
+            self: @ContractState,
             allowlist_addresses: Span<ContractAddress>,
             qualifier: QualificationProof,
         ) -> ContractAddress {
@@ -1709,9 +1666,7 @@ pub mod tournament_component {
         }
 
         fn _contains_address(
-            self: @ComponentState<TContractState>,
-            addresses: Span<ContractAddress>,
-            target: ContractAddress,
+            self: @ContractState, addresses: Span<ContractAddress>, target: ContractAddress,
         ) -> bool {
             let mut i = 0;
             loop {
@@ -1722,6 +1677,19 @@ pub mod tournament_component {
                     break true;
                 }
                 i += 1;
+            }
+        }
+
+        fn _create_context(self: @ContractState, tournament_id: u64) -> GameContextDetails {
+            let context = array![
+                GameContext { name: "Tournament ID", value: format!("{}", tournament_id) },
+            ]
+                .span();
+            GameContextDetails {
+                name: "Budokan",
+                description: "The onchain tournament system",
+                id: Option::Some(tournament_id.try_into().unwrap()),
+                context: context,
             }
         }
     }

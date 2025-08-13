@@ -1,7 +1,6 @@
 import { create } from "zustand";
-import { GameMetadata } from "@/generated/models.gen";
+import { GameMetadata } from "metagame-sdk";
 import { TabType } from "@/components/overview/TournamentTabs";
-import { feltToString } from "@/lib/utils";
 
 export interface GameData extends GameMetadata {
   isWhitelisted: boolean;
@@ -38,7 +37,7 @@ const useUIStore = create<State>((set, get) => ({
   getGameName: (gameAddress: string) => {
     const { gameData } = get();
     const game = gameData.find((game) => game.contract_address === gameAddress);
-    return feltToString(game?.name || "");
+    return game?.name || "";
   },
 }));
 

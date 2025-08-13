@@ -22,13 +22,11 @@ import {
 } from "@/lib/utils";
 import { getTokenLogoUrl, getTokenSymbol } from "@/lib/tokensMeta";
 import { useEkuboPrices } from "@/hooks/useEkuboPrices";
-import { useGameEndpoints } from "@/dojo/hooks/useGameEndpoints";
 import { useMemo, useState } from "react";
 import { useDojo } from "@/context/dojo";
 // import { calculateTotalValue } from "@/lib/utils/formatting";
-import { useGetGameSettings } from "@/dojo/hooks/useSqlQueries";
-import { formatGameSettingsData } from "@/lib/utils/formatting";
 import { LoadingSpinner } from "@/components/ui/spinner";
+import { useSettings } from "metagame-sdk/sql";
 
 interface TournamentConfirmationProps {
   formData: TournamentFormData;
@@ -47,16 +45,13 @@ const TournamentConfirmation = ({
   const { connect } = useConnectToSelectedChain();
   const { selectedChainConfig } = useDojo();
   const { gameData, getGameImage } = useUIStore();
-  const { gameNamespace, gameSettingsModel } = useGameEndpoints(formData.game);
   const [isCreating, setIsCreating] = useState(false);
 
-  const { data: settings } = useGetGameSettings({
-    namespace: gameNamespace ?? "",
-    settingsModel: gameSettingsModel ?? "",
-    active: true,
+  const { data: setting } = useSettings({
+    settingsIds: [Number(formData.settings)],
   });
 
-  const formattedSettings = formatGameSettingsData(settings);
+  const hasSettings = !!setting[0];
 
   const hasBonusPrizes =
     formData.bonusPrizes && formData.bonusPrizes.length > 0;
@@ -75,8 +70,6 @@ const TournamentConfirmation = ({
         : []),
     ],
   });
-
-  const hasSettings = formattedSettings[formData.settings];
 
   const currentTime = BigInt(new Date().getTime()) / 1000n;
   const startTime = BigInt(formData.startTime.getTime()) / 1000n;
@@ -144,11 +137,9 @@ const TournamentConfirmation = ({
                 <div className="flex flex-row items-center gap-2">
                   <TokenGameIcon image={getGameImage(formData.game)} />
                   <span>
-                    {feltToString(
-                      gameData.find(
-                        (game) => game.contract_address === formData.game
-                      )?.name ?? ""
-                    )}
+                    {gameData.find(
+                      (game) => game.contract_address === formData.game
+                    )?.name ?? ""}
                   </span>
                   <a
                     href={`${selectedChainConfig.blockExplorerUrl}/contract/${formData.game}`}
@@ -160,9 +151,7 @@ const TournamentConfirmation = ({
                   </a>
                 </div>
                 <span className="text-muted-foreground">Settings:</span>
-                <span>
-                  {hasSettings ? feltToString(hasSettings.name) : "Default"}
-                </span>
+                <span>{hasSettings ? setting[0].name : "Default"}</span>
                 <span className="text-muted-foreground">Leaderboard Size:</span>
                 <span>{formData.leaderboardSize}</span>
               </div>
@@ -273,6 +262,7 @@ const TournamentConfirmation = ({
                         <table className="table-auto col-span-2 w-full">
                           <thead>
                             <tr>
+                              <th className="px-4 py-2 text-left">Id</th>
                               <th className="px-4 py-2 text-left">Name</th>
                               <th className="px-4 py-2 text-left">Game</th>
                               <th className="px-4 py-2 text-left">Winners</th>
@@ -282,6 +272,9 @@ const TournamentConfirmation = ({
                             {formData.gatingOptions.tournament?.tournaments?.map(
                               (tournament) => (
                                 <tr key={tournament.metadata.name}>
+                                  <td className="px-4">
+                                    {Number(tournament.id)}
+                                  </td>
                                   <td className="px-4 capitalize">
                                     {feltToString(tournament.metadata.name)}
                                   </td>
@@ -292,13 +285,11 @@ const TournamentConfirmation = ({
                                           tournament.game_config.address
                                         )}
                                       />
-                                      {feltToString(
-                                        gameData.find(
-                                          (game) =>
-                                            game.contract_address ===
-                                            tournament.game_config.address
-                                        )?.name ?? ""
-                                      )}
+                                      {gameData.find(
+                                        (game) =>
+                                          game.contract_address ===
+                                          tournament.game_config.address
+                                      )?.name ?? ""}
                                     </div>
                                   </td>
                                   <td className="px-4 capitalize">

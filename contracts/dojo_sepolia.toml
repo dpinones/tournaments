@@ -5,29 +5,19 @@ description = "DNC"
 seed = "DNC"
 
 [env]
-# account_address = "0x0"
-# private_key = "0x0"
-chain_id = "SN_SEPOLIA"
 rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
-world_address = "0x01bfa92665fb815c9ec5f37c562a5c9a06fdf23ce022c1d33d4ac07cef5ad80c"
+world_address = "0x29f11cefb67df8a3962ba60816800ccf196f9497ae781bb4bc8589f8e245753"
 
 [namespace]
-default = "budokan_1_0_7"
+default = "budokan_1_0_8"
 
 [writers]
-"budokan_1_0_7" = ["budokan_1_0_7-Budokan"]
+"budokan_1_0_8" = ["budokan_1_0_8-Budokan"]
 
 [init_call_args]
-"budokan_1_0_7-Budokan" = [
-    "1", # safe_mode
-    "0" # test_mode
-]
-
-[migration]
-order_inits = []
-skip_contracts = [
-    "budokan_1_0_7-tournament_mock", 
-    "budokan_1_0_7-game_mock", 
-    "budokan_1_0_7-erc20_mock", 
-    "budokan_1_0_7-erc721_mock", 
+"budokan_1_0_8-Budokan" = [
+    "0", # safe_mode
+    "0", # test_mode
+    "0x06a1102ed881e0d6d689295db5819dd1d15f0d55cbe10e1b87587c2ea1ec8da4", # denshokan address
+    "0", # array length - ON SEPOLIA ALL TOKENS ARE REGISTERED
 ]

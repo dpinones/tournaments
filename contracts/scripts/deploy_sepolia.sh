@@ -11,7 +11,7 @@ sozo build -P sepolia
 # migrate
 #
 echo ">>> Migrate"
-sozo migrate -P sepolia --fee eth
+sozo migrate -P sepolia
 echo "👍"
 
 #-----------------
@@ -29,7 +29,7 @@ get_contract_address () {
   echo $RESULT
 }
 
-export TOURNAMENTS_ADDRESS=$(get_contract_address "budokan_1_0_7-Budokan")
+export TOURNAMENTS_ADDRESS=$(get_contract_address "budokan_1_0_8-Budokan")
 
 #-----------------
 # addresses

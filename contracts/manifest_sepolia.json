@@ -1329,7 +1329,7 @@
   "contracts": [
     {
       "address": "0x3199ea16e333929205dd334f2a749ed02a7bddd486ee52fb2f4a1c655a4138a",
-      "class_hash": "0x2840819729d7682747595a89c91c71c2792c9723f75fe0effc7c558b86c14c5",
+      "class_hash": "0x28dd7ea4ab952b85becdf4a1caa6da5c7d2cf6f3b520f0aa10124fca927cd83",
       "abi": [
         {
           "type": "impl",
@@ -1463,6 +1463,33 @@
           "interface_name": "game_components_metagame::extensions::context::interface::IMetagameContext"
         },
         {
+          "type": "interface",
+          "name": "game_components_metagame::extensions::context::interface::IMetagameContext",
+          "items": [
+            {
+              "type": "function",
+              "name": "has_context",
+              "inputs": [
+                {
+                  "name": "token_id",
+                  "type": "core::integer::u64"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "GameContextDetailsImpl",
+          "interface_name": "game_components_metagame::extensions::context::interface::IMetagameContextDetails"
+        },
+        {
           "type": "enum",
           "name": "core::option::Option::<core::integer::u32>",
           "variants": [
@@ -1524,27 +1551,11 @@
         },
         {
           "type": "interface",
-          "name": "game_components_metagame::extensions::context::interface::IMetagameContext",
+          "name": "game_components_metagame::extensions::context::interface::IMetagameContextDetails",
           "items": [
             {
               "type": "function",
-              "name": "has_context",
-              "inputs": [
-                {
-                  "name": "token_id",
-                  "type": "core::integer::u64"
-                }
-              ],
-              "outputs": [
-                {
-                  "type": "core::bool"
-                }
-              ],
-              "state_mutability": "view"
-            },
-            {
-              "type": "function",
-              "name": "context",
+              "name": "context_details",
               "inputs": [
                 {
                   "name": "token_id",
@@ -2268,7 +2279,7 @@
                 },
                 {
                   "name": "player_name",
-                  "type": "core::byte_array::ByteArray"
+                  "type": "core::felt252"
                 },
                 {
                   "name": "player_address",

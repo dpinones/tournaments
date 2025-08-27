@@ -38,7 +38,7 @@ pub mod Budokan {
     };
     use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
     use game_components_metagame::metagame::MetagameComponent;
-    use game_components_metagame::extensions::context::interface::IMetagameContext;
+    use game_components_metagame::extensions::context::interface::{IMetagameContext, IMetagameContextDetails};
     use game_components_metagame::extensions::context::context::ContextComponent;
     use game_components_token::core::interface::{
         IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
@@ -148,8 +148,11 @@ pub mod Budokan {
             let registration = store.get_registration(game_address, token_id);
             registration.tournament_id != 0
         }
+    }
 
-        fn context(self: @ContractState, token_id: u64) -> GameContextDetails {
+    #[abi(embed_v0)]
+    impl GameContextDetailsImpl of IMetagameContextDetails<ContractState> {
+        fn context_details(self: @ContractState, token_id: u64) -> GameContextDetails {
             let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
             let minigame_token_dispatcher = IMinigameTokenDispatcher {
@@ -297,7 +300,7 @@ pub mod Budokan {
             let creator_token_id = self
                 ._mint_game(
                     game_config.address,
-                    Option::Some("Tournament Creator"),
+                    Option::Some('Tournament Creator'),
                     Option::Some(game_config.settings_id),
                     Option::Some(schedule.game.start),
                     Option::Some(schedule.game.end),
@@ -327,7 +330,7 @@ pub mod Budokan {
         fn enter_tournament(
             ref self: ContractState,
             tournament_id: u64,
-            player_name: ByteArray,
+            player_name: felt252,
             player_address: ContractAddress,
             qualification: Option<QualificationProof>,
         ) -> (u64, u32) {
@@ -1078,7 +1081,7 @@ pub mod Budokan {
         fn _mint_game(
             ref self: ContractState,
             game_address: ContractAddress,
-            player_name: Option<ByteArray>,
+            player_name: Option<felt252>,
             settings_id: Option<u32>,
             start: Option<u64>,
             end: Option<u64>,

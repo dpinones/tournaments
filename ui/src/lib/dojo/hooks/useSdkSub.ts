@@ -5,24 +5,26 @@ import { useDojo } from "@/context/dojo";
 import { SchemaType } from "@/generated/models.gen";
 import { useDojoStore } from "@/dojo/hooks/useDojoStore";
 
-export type EntityResult = {
+export type EntityResult<N extends string = string> = {
   entityId: BigNumberish;
-} & Partial<SchemaType>;
+} & Partial<SchemaType[N]>;
 
-export type UseSdkSubEntitiesResult = {
-  entities: EntityResult[] | null;
+export type UseSdkSubEntitiesResult<N extends string = string> = {
+  entities: EntityResult<N>[] | null;
   isSubscribed: boolean;
   error?: Error | null;
 };
 
 export type UseSdkSubEntitiesProps = {
   query: any;
+  namespace: string;
   logging?: boolean;
   enabled?: boolean;
 };
 
 export const useSdkSubscribeEntities = ({
   query,
+  namespace,
   enabled = true,
 }: UseSdkSubEntitiesProps): UseSdkSubEntitiesResult => {
   const { sdk } = useDojo();
@@ -79,6 +81,15 @@ export const useSdkSubscribeEntities = ({
         setIsSubscribed(true);
         setError(null);
         _unsubscribe = () => subscription.cancel();
+        setEntities(
+          _initialEntities.getItems().map(
+            (e: any) =>
+              ({
+                entityId: e.entityId,
+                ...e.models[namespace],
+              } as EntityResult<typeof namespace>)
+          )
+        );
       } catch (err) {
         console.error("Failed to subscribe to entity query:", err);
         setError(err instanceof Error ? err : new Error(String(err)));

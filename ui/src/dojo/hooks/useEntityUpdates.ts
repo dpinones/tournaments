@@ -2,8 +2,7 @@ import { useDojoStore } from "@/dojo/hooks/useDojoStore";
 import { getEntityIdFromKeys } from "@dojoengine/utils";
 import { useDojo } from "@/context/dojo";
 import { TOURNAMENT_VERSION_KEY } from "@/lib/constants";
-import { bigintToHex } from "@/lib/utils";
-import { addAddressPadding, BigNumberish } from "starknet";
+import { BigNumberish } from "starknet";
 
 export const useEntityUpdates = () => {
   const { namespace } = useDojo();
@@ -18,7 +17,7 @@ export const useEntityUpdates = () => {
       (entity) => {
         return (
           entity?.models?.[namespace]?.PlatformMetrics?.total_tournaments ==
-          addAddressPadding(bigintToHex(BigInt(Number(totalTournaments))))
+          Number(totalTournaments)
         );
       },
       20000
@@ -35,7 +34,7 @@ export const useEntityUpdates = () => {
       (entity) => {
         return (
           entity?.models?.[namespace]?.EntryCount?.count ==
-          addAddressPadding(bigintToHex(BigInt(Number(entryCount) + 1)))
+          Number(entryCount) + 1
         );
       },
       20000
@@ -51,7 +50,7 @@ export const useEntityUpdates = () => {
       (entity) => {
         return (
           entity?.models?.[namespace]?.PrizeMetrics?.total_prizes ==
-          addAddressPadding(bigintToHex(BigInt(prizeCount)))
+          Number(prizeCount)
         );
       },
       20000

@@ -1,5 +1,6 @@
 import { useDojoStore } from "@/dojo/hooks/useDojoStore";
 import { SchemaType } from "@/generated/models.gen";
+import { addAddressPadding } from "starknet";
 
 /**
  * Custom hook to retrieve a specific model for a given entityId within a specified namespace.
@@ -17,7 +18,7 @@ function useModel<
   // Subscribe to the store and select the specific model data
   const modelData = useDojoStore(
     (state) =>
-      state.entities[entityId]?.models?.[namespace]?.[
+      state.entities[addAddressPadding(entityId)]?.models?.[namespace]?.[
         modelName
       ] as unknown as SchemaType[N][M]
   );

@@ -62,7 +62,7 @@ export const getGames = (): Game[] => {
       },
       {
         contract_address:
-          "0x00d9abf3d04eda96f93baf9873bda881a9580c475e551ff23e78c95ab561ea73",
+          "0x07ae26eecf0274aabb31677753ff3a4e15beec7268fa1b104f73ce3c89202831",
         name: "Death Mountain",
         image: "https://darkshuffle.dev/favicon.svg",
         url: "https://lootsurvivor.io/",

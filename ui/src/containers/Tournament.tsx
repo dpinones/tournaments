@@ -118,8 +118,8 @@ const Tournament = () => {
     [id]
   );
 
-  const tournamentModel = state.getEntity(tournamentEntityId)?.models[namespace]
-    ?.Tournament as TournamentModel;
+  const tournamentModel = state.getEntity(addAddressPadding(tournamentEntityId))
+    ?.models[namespace]?.Tournament as TournamentModel;
 
   const entryCountModel = useModel(
     tournamentEntityId,

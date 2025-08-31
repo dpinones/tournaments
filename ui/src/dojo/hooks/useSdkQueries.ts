@@ -8,7 +8,8 @@ import {
   OrComposeClause,
 } from "@dojoengine/sdk";
 import { getModelsMapping } from "@/generated/models.gen";
-import { addAddressPadding, BigNumberish } from "starknet";
+import { BigNumberish } from "starknet";
+import { padU64 } from "@/lib/utils";
 
 export const useGetTokensQuery = (namespace: string) => {
   const query = useMemo(
@@ -71,37 +72,37 @@ export const useGetTournamentQuery = (
               getModelsMapping(namespace).Tournament,
               "id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId)) // "0x0000000000000001"
             ),
             MemberClause(
               getModelsMapping(namespace).EntryCount,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
             MemberClause(
               getModelsMapping(namespace).Prize,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
             MemberClause(
               getModelsMapping(namespace).PrizeClaim,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
             MemberClause(
               getModelsMapping(namespace).Leaderboard,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
             MemberClause(
               getModelsMapping(namespace).Registration,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
           ]).build()
         )
@@ -146,25 +147,25 @@ export const useSubscribeTournamentQuery = (
               getModelsMapping(namespace).Tournament,
               "id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
             MemberClause(
               getModelsMapping(namespace).EntryCount,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
             MemberClause(
               getModelsMapping(namespace).Registration,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
             MemberClause(
               getModelsMapping(namespace).Prize,
               "tournament_id",
               "Eq",
-              addAddressPadding(tournamentId)
+              padU64(BigInt(tournamentId))
             ),
           ]).build()
         )
@@ -180,6 +181,7 @@ export const useSubscribeTournamentQuery = (
 
   const { entities, isSubscribed } = useSdkSubscribeEntities({
     query,
+    namespace,
   });
   return { entities, isSubscribed };
 };
@@ -196,6 +198,7 @@ export const useSubscribePrizesQuery = (namespace: string) => {
 
   const { entities, isSubscribed } = useSdkSubscribeEntities({
     query,
+    namespace,
   });
   return { entities, isSubscribed };
 };
@@ -227,6 +230,7 @@ export const useSubscribeTournamentsQuery = (namespace: string) => {
 
   const { entities, isSubscribed } = useSdkSubscribeEntities({
     query,
+    namespace,
   });
   return { entities, isSubscribed };
 };
@@ -245,6 +249,7 @@ export const useSubscribeTokensQuery = (namespace: string) => {
 
   const { entities, isSubscribed } = useSdkSubscribeEntities({
     query,
+    namespace,
   });
   return { entities, isSubscribed };
 };
@@ -272,6 +277,7 @@ export const useSubscribeMetricsQuery = (namespace: string) => {
 
   const { entities, isSubscribed } = useSdkSubscribeEntities({
     query,
+    namespace,
   });
   return { entities, isSubscribed };
 };

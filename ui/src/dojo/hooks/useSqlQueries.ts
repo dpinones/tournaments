@@ -1,6 +1,7 @@
 import { useSqlExecute } from "@/lib/dojo/hooks/useSqlExecute";
 import { useMemo } from "react";
 import { addAddressPadding, BigNumberish } from "starknet";
+import { padU64 } from "@/lib/utils";
 
 export const useGetGameSettingsCount = ({
   namespace,
@@ -108,14 +109,14 @@ export const useGetUpcomingTournamentsCount = ({
   fromTournamentId,
 }: {
   namespace: string;
-  currentTime: string;
+  currentTime: bigint;
   fromTournamentId?: string;
 }) => {
   const query = useMemo(
     () => `
     SELECT COUNT(*) as count 
     FROM '${namespace}-Tournament' m
-    WHERE m.'schedule.game.start' > '${currentTime}'
+    WHERE m.'schedule.game.start' > '${padU64(currentTime)}'
     ${fromTournamentId ? `AND m.id > '${fromTournamentId}'` : ""}
   `,
     [namespace, currentTime, fromTournamentId]
@@ -130,14 +131,16 @@ export const useGetLiveTournamentsCount = ({
   fromTournamentId,
 }: {
   namespace: string;
-  currentTime: string;
+  currentTime: bigint;
   fromTournamentId?: string;
 }) => {
   const query = useMemo(
     () => `
     SELECT COUNT(*) as count 
     FROM '${namespace}-Tournament' m
-    WHERE (m.'schedule.game.start' <= '${currentTime}' AND m.'schedule.game.end' > '${currentTime}')
+    WHERE (m.'schedule.game.start' <= '${padU64(
+      currentTime
+    )}' AND m.'schedule.game.end' > '${padU64(currentTime)}')
     ${fromTournamentId ? `AND m.id > '${fromTournamentId}'` : ""}
   `,
     [namespace, currentTime, fromTournamentId]
@@ -152,14 +155,14 @@ export const useGetEndedTournamentsCount = ({
   fromTournamentId,
 }: {
   namespace: string;
-  currentTime: string;
+  currentTime: bigint;
   fromTournamentId?: string;
 }) => {
   const query = useMemo(
     () => `
     SELECT COUNT(*) as count 
     FROM '${namespace}-Tournament' m
-    WHERE m.'schedule.game.end' <= '${currentTime}'
+    WHERE m.'schedule.game.end' <= '${padU64(currentTime)}'
     ${fromTournamentId ? `AND m.id > '${fromTournamentId}'` : ""}
   `,
     [namespace, currentTime, fromTournamentId]
@@ -211,7 +214,7 @@ export const useGetMyTournamentsCount = ({
 
 const getTournamentWhereClause = (
   status: string,
-  currentTime: string,
+  currentTime: bigint,
   tournamentIds?: string[],
   fromTournamentId?: string
 ) => {
@@ -219,13 +222,15 @@ const getTournamentWhereClause = (
 
   switch (status) {
     case "upcoming":
-      whereClause = `WHERE t.'schedule.game.start' > '${currentTime}'`;
+      whereClause = `WHERE t.'schedule.game.start' > '${padU64(currentTime)}'`;
       break;
     case "live":
-      whereClause = `WHERE t.'schedule.game.start' <= '${currentTime}' AND t.'schedule.game.end' > '${currentTime}'`;
+      whereClause = `WHERE t.'schedule.game.start' <= '${padU64(
+        currentTime
+      )}' AND t.'schedule.game.end' > '${padU64(currentTime)}'`;
       break;
     case "ended":
-      whereClause = `WHERE t.'schedule.game.end' <= '${currentTime}'`;
+      whereClause = `WHERE t.'schedule.game.end' <= '${padU64(currentTime)}'`;
       break;
     case "all":
       whereClause = "WHERE 1=1"; // Use a true condition to make it easier to add more conditions
@@ -281,7 +286,7 @@ export const useGetTournaments = ({
   status: string;
   tournamentIds?: string[];
   fromTournamentId?: string;
-  currentTime?: string;
+  currentTime?: bigint;
   sortBy?: string;
   offset?: number;
   limit?: number;
@@ -329,7 +334,7 @@ export const useGetTournaments = ({
     LEFT JOIN '${namespace}-EntryCount' e ON t.id = e.tournament_id
     ${getTournamentWhereClause(
       status,
-      currentTime ?? "",
+      currentTime ?? 0n,
       tournamentIds,
       fromTournamentId
     )}

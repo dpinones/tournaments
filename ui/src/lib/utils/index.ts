@@ -117,6 +117,22 @@ export function padAddress(address: string) {
   }
 }
 
+export function padU32(num: number): string {
+  if (num < 0 || num > 0xffffffff) {
+    throw new Error("Value out of range for u32");
+  }
+  const hex = num.toString(16);
+  return "0x" + hex.padStart(8, "0");
+}
+
+export function padU64(num: bigint): string {
+  if (num < 0n || num > 0xffffffffffffffffn) {
+    throw new Error("Value out of range for u64");
+  }
+  const hex = num.toString(16);
+  return "0x" + hex.padStart(16, "0");
+}
+
 export function displayAddress(string: string) {
   if (string === undefined) return "unknown";
   return string.substring(0, 6) + "..." + string.substring(string.length - 4);

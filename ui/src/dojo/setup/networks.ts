@@ -125,7 +125,7 @@ const snSepoliaConfig: DojoChainConfig = {
   chainId: ChainId.SN_SEPOLIA,
   name: "Starknet Sepolia",
   rpcUrl: "https://api.cartridge.gg/x/starknet/sepolia",
-  toriiUrl: "https://api.cartridge.gg/x/pg-sepolia-4/torii",
+  toriiUrl: "https://api.cartridge.gg/x/pg-sepolia-5/torii",
   toriiTokensUrl: "",
   relayUrl: undefined,
   blastRpc: undefined,
@@ -139,7 +139,7 @@ const snSepoliaConfig: DojoChainConfig = {
   ethAddress: sepolia.nativeCurrency.address,
   connectorIds: [supportedConnectorIds.CONTROLLER],
   denshokanAddress:
-    "0x00cf3712b6168493d89be576f3ebdf0c76dcda964f952dacc21a72094b9e2899",
+    "0x0610aba32da98547f9f65fe0195cc60c08f1ef6fa2f2a0fc03e35f1c29319fd3",
 };
 
 const snMainnetConfig: DojoChainConfig = {

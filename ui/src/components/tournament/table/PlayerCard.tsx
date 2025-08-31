@@ -28,7 +28,7 @@ export const PlayerDetails = ({
         </div>
       </div>
       <div className="w-full h-0.5 bg-brand/50" />
-      {metadata !== "" ? (
+      {metadata !== "" && metadata !== undefined ? (
         <img
           src={JSON.parse(metadata)?.image}
           alt="metadata"

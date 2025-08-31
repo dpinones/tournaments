@@ -122,7 +122,7 @@ const Overview = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   const currentTime = useMemo(() => {
-    return addAddressPadding(bigintToHex(BigInt(Date.now()) / 1000n));
+    return BigInt(Date.now()) / 1000n;
   }, []);
 
   const fromTournamentId = useMemo(() => {
@@ -220,11 +220,6 @@ const Overview = () => {
     setGameFilters(gameFilters.filter((f) => f !== filter));
   };
 
-  const hexTimestamp = useMemo(
-    () => addAddressPadding(bigintToHex(BigInt(new Date().getTime()) / 1000n)),
-    []
-  );
-
   // Prevent initial double loading by controlling when to fetch
   const shouldFetch = useMemo(() => {
     // Only fetch if:
@@ -244,7 +239,7 @@ const Overview = () => {
     // refetch: refetchTournaments,
   } = useGetTournaments({
     namespace: namespace,
-    currentTime: hexTimestamp,
+    currentTime,
     gameFilters: gameFilters,
     offset: currentPage * 12,
     limit: 12,

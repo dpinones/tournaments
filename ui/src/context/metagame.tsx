@@ -27,6 +27,7 @@ export const MetagameProvider = ({ children }: { children: ReactNode }) => {
     initMetagame({
       toriiUrl: selectedChainConfig.toriiUrl!,
       worldAddress: manifest.world.address ?? "",
+      tokenAddress: selectedChainConfig.denshokanAddress,
     })
       .then(setMetagameClient)
       .catch((error) => {

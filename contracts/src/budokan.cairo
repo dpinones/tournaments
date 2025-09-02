@@ -141,10 +141,10 @@ pub mod Budokan {
         fn has_context(self: @ContractState, token_id: u64) -> bool {
             let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
-            let minigame_token_dispatcher = IMinigameTokenDispatcher {
+            let default_token_dispatcher = IMinigameTokenDispatcher {
                 contract_address: self.default_token_address(),
             };
-            let game_address = minigame_token_dispatcher.game_address();
+            let game_address = default_token_dispatcher.token_game_address(token_id);
             let registration = store.get_registration(game_address, token_id);
             registration.tournament_id != 0
         }
@@ -155,10 +155,10 @@ pub mod Budokan {
         fn context_details(self: @ContractState, token_id: u64) -> GameContextDetails {
             let mut world = self.world(@DEFAULT_NS());
             let store: Store = StoreTrait::new(world);
-            let minigame_token_dispatcher = IMinigameTokenDispatcher {
+            let default_token_dispatcher = IMinigameTokenDispatcher {
                 contract_address: self.default_token_address(),
             };
-            let game_address = minigame_token_dispatcher.game_address();
+            let game_address = default_token_dispatcher.token_game_address(token_id);
             let registration = store.get_registration(game_address, token_id);
             let context = array![
                 GameContext {

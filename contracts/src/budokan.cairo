@@ -3,14 +3,12 @@ pub mod Budokan {
     use starknet::{ContractAddress, get_block_timestamp, get_contract_address, get_caller_address};
     use core::num::traits::Zero;
 
-    use budokan::constants::{
-        TWO_POW_128, DEFAULT_NS, VERSION, SEPOLIA_CHAIN_ID, GAME_CREATOR_TOKEN_ID,
-    };
+    use budokan::constants::{TWO_POW_128, DEFAULT_NS, SEPOLIA_CHAIN_ID, GAME_CREATOR_TOKEN_ID};
     use budokan::models::budokan::{
-        Tournament as TournamentModel, Registration, Leaderboard, Prize, Token, TournamentConfig,
-        TokenType, TokenTypeData, TournamentType, PrizeType, Role, PrizeClaim, Metadata, GameConfig,
-        EntryFee, EntryRequirement, QualificationProof, TournamentQualification,
-        EntryRequirementType, TokenData,
+        Tournament as TournamentModel, Registration, Leaderboard, Prize, Token, TokenType,
+        TokenTypeData, TournamentType, PrizeType, Role, PrizeClaim, Metadata, GameConfig, EntryFee,
+        EntryRequirement, QualificationProof, TournamentQualification, EntryRequirementType,
+        TokenData,
     };
     use budokan::models::schedule::{Schedule, Phase};
     use budokan::interfaces::{IBudokan};
@@ -38,7 +36,9 @@ pub mod Budokan {
     };
     use game_components_metagame::extensions::context::structs::{GameContextDetails, GameContext};
     use game_components_metagame::metagame::MetagameComponent;
-    use game_components_metagame::extensions::context::interface::{IMetagameContext, IMetagameContextDetails};
+    use game_components_metagame::extensions::context::interface::{
+        IMetagameContext, IMetagameContextDetails,
+    };
     use game_components_metagame::extensions::context::context::ContextComponent;
     use game_components_token::core::interface::{
         IMinigameTokenDispatcher, IMinigameTokenDispatcherTrait,
@@ -87,15 +87,12 @@ pub mod Budokan {
 
     fn dojo_init(
         ref self: ContractState,
-        safe_mode: bool,
-        test_mode: bool,
         default_token_address: ContractAddress,
         registered_tokens: Span<TokenData>,
     ) {
         // Initialize tournament config
         let mut world = self.world(@DEFAULT_NS());
         let mut store: Store = StoreTrait::new(world);
-        store.set_tournament_config(@TournamentConfig { key: VERSION, safe_mode, test_mode });
 
         // Initialize metagame component
         self.context.initializer();
@@ -212,9 +209,7 @@ pub mod Budokan {
         ) {
             let mut world = self.world(@DEFAULT_NS());
             let mut store: Store = StoreTrait::new(world);
-            let safe_mode = store.get_tournament_config(VERSION).safe_mode;
             let token_model = store.get_token(address);
-            assert!(!safe_mode, "Tournament: Cannot register token as safe mode is enabled");
             self._assert_token_not_registered(token_model);
             let (name, symbol) = self._register_token(address, token_type);
             match token_type {

@@ -174,15 +174,6 @@ pub struct Token {
 }
 
 #[dojo::model]
-#[derive(Copy, Drop, Serde)]
-pub struct TournamentConfig {
-    #[key]
-    pub key: felt252,
-    pub safe_mode: bool,
-    pub test_mode: bool,
-}
-
-#[dojo::model]
 #[derive(Copy, Drop, Serde, IntrospectPacked)]
 pub struct PrizeClaim {
     #[key]

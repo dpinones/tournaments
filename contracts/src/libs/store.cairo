@@ -2,9 +2,9 @@ use starknet::ContractAddress;
 use dojo::world::{WorldStorage};
 use dojo::model::{ModelStorage};
 use budokan::models::budokan::{
-    Tournament, EntryCount, Prize, Leaderboard, Token, Registration, TournamentConfig,
-    TournamentTokenMetrics, PlatformMetrics, PrizeMetrics, PrizeClaim, PrizeType, Metadata,
-    GameConfig, EntryFee, EntryRequirement, QualificationEntries, QualificationProof,
+    Tournament, EntryCount, Prize, Leaderboard, Token, Registration, TournamentTokenMetrics,
+    PlatformMetrics, PrizeMetrics, PrizeClaim, PrizeType, Metadata, GameConfig, EntryFee,
+    EntryRequirement, QualificationEntries, QualificationProof,
 };
 use budokan::models::schedule::Schedule;
 use budokan::constants::{VERSION};
@@ -78,11 +78,6 @@ pub impl StoreImpl of StoreTrait {
     #[inline(always)]
     fn get_token(self: Store, address: ContractAddress) -> Token {
         (self.world.read_model(address))
-    }
-
-    #[inline(always)]
-    fn get_tournament_config(self: Store, key: felt252) -> TournamentConfig {
-        (self.world.read_model(key))
     }
 
     #[inline(always)]
@@ -177,11 +172,6 @@ pub impl StoreImpl of StoreTrait {
 
     #[inline(always)]
     fn set_token(ref self: Store, model: @Token) {
-        self.world.write_model(model);
-    }
-
-    #[inline(always)]
-    fn set_tournament_config(ref self: Store, model: @TournamentConfig) {
         self.world.write_model(model);
     }
 

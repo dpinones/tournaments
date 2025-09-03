@@ -13,15 +13,14 @@ use budokan::constants::{
     DEFAULT_NS,
 };
 use budokan::libs::store::{Store as BudokanStore, StoreTrait as BudokanStoreTrait};
-use budokan::constants::{VERSION};
 
 use budokan::models::{
     budokan::{
-        m_Tournament, m_Registration, m_EntryCount, m_Leaderboard, m_Prize, m_Token,
-        m_TournamentConfig, m_PrizeMetrics, m_PlatformMetrics, m_TournamentTokenMetrics,
-        m_PrizeClaim, m_QualificationEntries, ERC20Data, ERC721Data, EntryFee, TokenType,
-        EntryRequirement, EntryRequirementType, TournamentType, Prize, PrizeType, Role,
-        QualificationProof, TournamentQualification, NFTQualification, TokenData, TokenTypeData,
+        m_Tournament, m_Registration, m_EntryCount, m_Leaderboard, m_Prize, m_Token, m_PrizeMetrics,
+        m_PlatformMetrics, m_TournamentTokenMetrics, m_PrizeClaim, m_QualificationEntries,
+        ERC20Data, ERC721Data, EntryFee, TokenType, EntryRequirement, EntryRequirementType,
+        TournamentType, Prize, PrizeType, Role, QualificationProof, TournamentQualification,
+        NFTQualification, TokenData, TokenTypeData,
     },
 };
 use budokan::models::schedule::{Schedule, Period, Phase};
@@ -127,7 +126,6 @@ fn setup_uninitialized(
             TestResource::Model(m_Leaderboard::TEST_CLASS_HASH.try_into().unwrap()),
             TestResource::Model(m_Prize::TEST_CLASS_HASH.try_into().unwrap()),
             TestResource::Model(m_Token::TEST_CLASS_HASH.try_into().unwrap()),
-            TestResource::Model(m_TournamentConfig::TEST_CLASS_HASH.try_into().unwrap()),
             TestResource::Model(m_PrizeMetrics::TEST_CLASS_HASH.try_into().unwrap()),
             TestResource::Model(m_PlatformMetrics::TEST_CLASS_HASH.try_into().unwrap()),
             TestResource::Model(m_TournamentTokenMetrics::TEST_CLASS_HASH.try_into().unwrap()),
@@ -155,8 +153,6 @@ fn setup_uninitialized(
         .append(TokenData { token_address: erc721_mock_address, token_type: TokenType::erc721 });
 
     let mut init_calldata = array![];
-    init_calldata.append(false.into()); // safe_mode
-    init_calldata.append(false.into()); // test_mode
     init_calldata.append(denshokan_address.into()); // denshokan_address
 
     // Serialize the token data array
@@ -227,10 +223,6 @@ fn initializer() {
 
     let mut world = contracts.world;
     let store: BudokanStore = BudokanStoreTrait::new(world);
-
-    let tournament_config = store.get_tournament_config(VERSION);
-    assert(tournament_config.safe_mode == false, 'Invalid safe mode');
-    assert(tournament_config.test_mode == false, 'Invalid test mode');
 
     let erc20_token = store.get_token(contracts.erc20.contract_address);
     assert(erc20_token.address == contracts.erc20.contract_address, 'Invalid erc20 token address');

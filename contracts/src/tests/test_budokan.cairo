@@ -37,11 +37,13 @@ use budokan::tests::helpers::{
     test_game_period, registration_period_too_short, registration_period_too_long,
     registration_open_beyond_tournament_end, test_season_schedule, tournament_too_long,
 };
-use budokan::tests::mocks::{erc20_mock::erc20_mock, erc721_mock::erc721_mock};
+use budokan::tests::mocks::{
+    erc20_mock::erc20_mock, erc721_mock::erc721_mock, erc721_old_mock::erc721_old_mock,
+};
 use budokan::budokan::Budokan;
 use budokan::tests::interfaces::{
     IERC20MockDispatcher, IERC20MockDispatcherTrait, IERC721MockDispatcher,
-    IERC721MockDispatcherTrait,
+    IERC721MockDispatcherTrait, IERC721OldMockDispatcher, IERC721OldMockDispatcherTrait
 };
 use budokan::interfaces::{IBudokanDispatcher, IBudokanDispatcherTrait};
 use game_components_token::interface::{
@@ -66,6 +68,7 @@ pub struct TestContracts {
     pub denshokan: IMinigameTokenMixinDispatcher,
     pub erc20: IERC20MockDispatcher,
     pub erc721: IERC721MockDispatcher,
+    pub erc721_old: IERC721OldMockDispatcher,
 }
 
 
@@ -112,7 +115,7 @@ fn assert_only_event_approval(
 
 fn setup_uninitialized(
     denshokan_address: ContractAddress,
-) -> (WorldStorage, ContractAddress, ContractAddress) {
+) -> (WorldStorage, ContractAddress, ContractAddress, ContractAddress) {
     testing::set_block_number(1);
     testing::set_block_timestamp(1);
 
@@ -144,6 +147,9 @@ fn setup_uninitialized(
     let erc721_mock_address = deploy_contract(
         erc721_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
     );
+    let erc721_old_mock_address = deploy_contract(
+        erc721_old_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
+    );
 
     // Create token data array for new dojo_init signature
     let mut token_data_array = array![];
@@ -151,6 +157,10 @@ fn setup_uninitialized(
         .append(TokenData { token_address: erc20_mock_address, token_type: TokenType::erc20 });
     token_data_array
         .append(TokenData { token_address: erc721_mock_address, token_type: TokenType::erc721 });
+    token_data_array
+        .append(
+            TokenData { token_address: erc721_old_mock_address, token_type: TokenType::erc721 },
+        );
 
     let mut init_calldata = array![];
     init_calldata.append(denshokan_address.into()); // denshokan_address
@@ -170,12 +180,12 @@ fn setup_uninitialized(
 
     world.sync_perms_and_inits(contract_defs.span());
 
-    (world, erc20_mock_address, erc721_mock_address)
+    (world, erc20_mock_address, erc721_mock_address, erc721_old_mock_address)
 }
 
 pub fn setup() -> TestContracts {
     let denshokan_contracts = setup_denshokan::setup();
-    let (world, erc20_mock_address, erc721_mock_address) = setup_uninitialized(
+    let (world, erc20_mock_address, erc721_mock_address, erc721_old_mock_address) = setup_uninitialized(
         denshokan_contracts.denshokan.contract_address,
     );
 
@@ -188,6 +198,7 @@ pub fn setup() -> TestContracts {
     let denshokan = denshokan_contracts.denshokan;
     let erc20 = IERC20MockDispatcher { contract_address: erc20_mock_address };
     let erc721 = IERC721MockDispatcher { contract_address: erc721_mock_address };
+    let erc721_old = IERC721OldMockDispatcher { contract_address: erc721_old_mock_address };
 
     // mint tokens
     utils::impersonate(OWNER());
@@ -203,8 +214,9 @@ pub fn setup() -> TestContracts {
     utils::drop_all_events(denshokan.contract_address);
     utils::drop_all_events(erc20.contract_address);
     utils::drop_all_events(erc721.contract_address);
+    utils::drop_all_events(erc721_old.contract_address);
 
-    TestContracts { world, budokan, minigame, denshokan, erc20, erc721 }
+    TestContracts { world, budokan, minigame, denshokan, erc20, erc721, erc721_old }
 }
 
 //
@@ -239,6 +251,15 @@ fn initializer() {
     assert(erc721_token.symbol == "T721", 'Invalid erc721 token symbol');
     assert(erc721_token.token_type == TokenType::erc721, 'Invalid erc721 token type');
     assert(erc721_token.is_registered == true, 'Invalid erc721 token registered');
+
+    let erc721_old_token = store.get_token(contracts.erc721_old.contract_address);
+    assert!(
+        erc721_old_token.address == contracts.erc721_old.contract_address, "Invalid erc721_old token address",
+    );
+    assert!(erc721_old_token.name == "Test ERC721 Old", "Invalid erc721_old token name");
+    assert!(erc721_old_token.symbol == "T721O", "Invalid erc721_old token symbol");
+    assert!(erc721_old_token.token_type == TokenType::erc721, "Invalid erc721_old token type");
+    assert!(erc721_old_token.is_registered == true, "Invalid erc721_old token registered");
 }
 
 //
@@ -1132,71 +1153,99 @@ fn create_tournament_season() {
     assert(tournament.schedule == schedule, 'Invalid tournament schedule');
 }
 
-// //
-// // Test registering tokens
-// //
+//
+// Test registering tokens
+//
 
-// // #[test]
-// // fn register_token() {
-// //     let (_world, mut tournament, _loot_survivor, _pragma, _eth, _lords, mut erc20, mut
-// // erc721,) =
-// //         setup();
+#[test] 
+fn register_token() {
+    let contracts = setup();
 
-// //     utils::impersonate(OWNER());
-// //     erc20.approve(tournament.contract_address, 1);
-// //     erc721.approve(tournament.contract_address, 1);
-// //     let tokens = array![
-// //         Token {
-// //             token: erc20.contract_address,
-// //             token_type: TokenType::erc20(ERC20Data { amount: 1 })
-// //         },
-// //         Token {
-// //             token: erc721.contract_address,
-// //             token_type: TokenType::erc721(ERC721Data { id: 1 })
-// //         },
-// //     ];
+    utils::impersonate(OWNER());
+    
+    // Deploy new token contracts that are not pre-registered
+    let new_erc20_address = deploy_contract(
+        erc20_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
+    );
+    let new_erc721_address = deploy_contract(
+        erc721_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
+    );
+    
+    // Create dispatchers for the new tokens
+    let new_erc20 = IERC20MockDispatcher { contract_address: new_erc20_address };
+    let new_erc721 = IERC721MockDispatcher { contract_address: new_erc721_address };
+    
+    // Mint tokens to owner
+    new_erc20.mint(OWNER(), 1000);
+    new_erc721.mint(OWNER(), 1);
+    
+    // Verify new tokens are not yet registered
+    assert(!contracts.budokan.is_token_registered(new_erc20_address), 'New ERC20 not registered');
+    assert(!contracts.budokan.is_token_registered(new_erc721_address), 'New ERC721 not registered');
+    
+    // Set approvals needed for registration (ERC20 needs allowance of 1, ERC721 needs approval)
+    new_erc20.approve(contracts.budokan.contract_address, 1);
+    new_erc721.approve(contracts.budokan.contract_address, 1);
+    
+    // Register new ERC20 token
+    contracts.budokan.register_token(
+        new_erc20_address, 
+        TokenTypeData::erc20(ERC20Data { amount: 1 })
+    );
+    
+    // Register new ERC721 token
+    contracts.budokan.register_token(
+        new_erc721_address, 
+        TokenTypeData::erc721(ERC721Data { id: 1 })
+    );
 
-// //     tournament.register_tokens(tokens);
-// //     assert(erc20.balance_of(OWNER()) == 1000000000000000000000, 'Invalid balance');
-// //     assert(erc721.balance_of(OWNER()) == 1, 'Invalid balance');
-// //     assert(tournament.is_token_registered(erc20.contract_address), 'Invalid registration');
-// //     assert(tournament.is_token_registered(erc721.contract_address), 'Invalid registration');
-// // }
+    // Verify new tokens are now registered
+    assert(contracts.budokan.is_token_registered(new_erc20_address), 'New ERC20 not registered');
+    assert(contracts.budokan.is_token_registered(new_erc721_address), 'New ERC721 not registered');
+    
+    // Verify original setup tokens are still registered
+    // Note: The old ERC721 token compatibility is proven by the setup process where
+    // erc721_old (felt252 metadata format) is successfully registered during initialization
+    assert(contracts.budokan.is_token_registered(contracts.erc20.contract_address), 'Setup ERC20 not registered');
+    assert(contracts.budokan.is_token_registered(contracts.erc721.contract_address), 'Setup ERC721 not registered');
+    assert(contracts.budokan.is_token_registered(contracts.erc721_old.contract_address), 'Setup ERC721 old not registered');
+}
 
-// // #[test]
-// // #[should_panic(expected: ('token already registered', 'ENTRYPOINT_FAILED'))]
-// // fn register_token_already_registered() {
-// //     let (_world, mut tournament, _loot_survivor, _pragma, _eth, _lords, mut erc20, mut erc721,
-// // _golden_token, _blobert) =
-// //         setup();
+#[test]
+fn register_token_old_erc721_compatibility() {
+    let contracts = setup();
 
-// //     utils::impersonate(OWNER());
-// //     erc20.approve(tournament.contract_address, 1);
-// //     erc721.approve(tournament.contract_address, 1);
-// //     let tokens = array![
-// //         Token {
-// //             token: erc20.contract_address,
-// //             token_type: TokenType::erc20(ERC20Data { amount: 1 })
-// //         },
-// //         Token {
-// //             token: erc721.contract_address,
-// //             token_type: TokenType::erc721(ERC721Data { id: 1 })
-// //         },
-// //     ];
+    // This test validates that old ERC721 tokens (those with felt252 metadata)
+    // are successfully registered and can be queried through the system
+    
+    let mut world = contracts.world;
+    let store: BudokanStore = BudokanStoreTrait::new(world);
 
-// //     tournament.register_tokens(tokens);
-// //     let tokens = array![
-// //         Token {
-// //             token: erc20.contract_address,
-// //             token_type: TokenType::erc20(ERC20Data { amount: 1 })
-// //         },
-// //         Token {
-// //             token: erc721.contract_address,
-// //             token_type: TokenType::erc721(ERC721Data { id: 1 })
-// //         },
-// //     ];
-// //     tournament.register_tokens(tokens);
-// // }
+    // Verify the old ERC721 token was registered during setup and has felt252-style metadata
+    let erc721_old_token = store.get_token(contracts.erc721_old.contract_address);
+    assert(erc721_old_token.is_registered == true, 'ERC721 old not registered');
+    assert(erc721_old_token.token_type == TokenType::erc721, 'Wrong token type');
+    assert(erc721_old_token.name == "Test ERC721 Old", 'Wrong name');
+    assert(erc721_old_token.symbol == "T721O", 'Wrong symbol');
+    
+    // Verify the register_token system accepts and processes old ERC721 format
+    // (this is proven by successful initialization where all three token types are processed)
+    assert(contracts.budokan.is_token_registered(contracts.erc721_old.contract_address), 'Old ERC721 not in system');
+}
+
+#[test]
+#[should_panic]
+fn register_token_already_registered() {
+    let contracts = setup();
+
+    utils::impersonate(OWNER());
+    
+    // Try to register a token that was already registered during setup - should panic
+    contracts.budokan.register_token(
+        contracts.erc20.contract_address, 
+        TokenTypeData::erc20(ERC20Data { amount: 1 })
+    );
+}
 
 //
 // Test entering tournaments

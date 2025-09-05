@@ -5,6 +5,7 @@ pub mod libs {
     pub mod utils;
     pub mod lifecycle;
     pub mod schedule;
+    pub mod metadata_helper;
 }
 pub mod models {
     pub mod lifecycle;
@@ -22,6 +23,7 @@ mod tests {
     pub mod mocks {
         pub mod erc20_mock;
         pub mod erc721_mock;
+        pub mod erc721_old_mock;
     }
     #[cfg(test)]
     pub mod setup_denshokan;

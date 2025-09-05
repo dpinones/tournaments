@@ -27,6 +27,13 @@ pub trait IERC20Mock<TState> {
 }
 
 #[starknet::interface]
+pub trait IERC721OldMock<TState> {
+    // IERC721Metadata
+    fn name(self: @TState) -> felt252;
+    fn symbol(self: @TState) -> felt252;
+}
+
+#[starknet::interface]
 pub trait IERC721Mock<TState> {
     // ISRC5
     fn supports_interface(self: @TState, interface_id: felt252) -> bool;
@@ -71,3 +78,4 @@ pub trait IERC721Mock<TState> {
     // IERC721Public
     fn mint(ref self: TState, recipient: ContractAddress, token_id: u256);
 }
+

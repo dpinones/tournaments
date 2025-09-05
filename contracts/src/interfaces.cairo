@@ -49,3 +49,15 @@ pub trait IBudokan<TState> {
     ) -> u64;
 }
 
+#[starknet::interface]
+pub trait IERC20MetadataFelt<TState> {
+    fn name(self: @TState) -> felt252;
+    fn symbol(self: @TState) -> felt252;
+}
+
+#[starknet::interface]
+pub trait IERC721MetadataFelt<TState> {
+    fn name(self: @TState) -> felt252;
+    fn symbol(self: @TState) -> felt252;
+}
+

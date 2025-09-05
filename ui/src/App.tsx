@@ -50,9 +50,20 @@ function App() {
   const allGames = useMemo(() => {
     if (!minigames) return [];
 
+    // Define contract addresses to filter out
+    const filteredAddresses = [
+      // Add contract addresses you want to filter out here
+      "0x0602d92f353f740efe5faca12293b7d4fc19b219c0722e746951817373605163",
+    ];
+
+    // Filter minigames to exclude specific contract addresses
+    const filteredMinigames = minigames.filter(
+      (game) => !filteredAddresses.includes(game.contract_address)
+    );
+
     // Create maps for faster lookups
     const metadataMap = new Map();
-    minigames.forEach((game) => {
+    filteredMinigames.forEach((game) => {
       metadataMap.set(game.contract_address, game);
     });
 

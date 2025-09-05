@@ -16,6 +16,7 @@ pub mod Budokan {
     use budokan::libs::schedule::{
         ScheduleTrait, ScheduleImpl, ScheduleAssertionsTrait, ScheduleAssertionsImpl,
     };
+    use budokan::libs::metadata_helper::get_token_metadata;
 
     use openzeppelin_introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
     use openzeppelin_token::erc20::interface::{
@@ -107,20 +108,9 @@ pub mod Budokan {
             let token_data = *registered_tokens.at(tokens_index);
             let token_model = store.get_token(token_data.token_address);
             self._assert_token_not_registered(token_model);
-            let (name, symbol) = match token_data.token_type {
-                TokenType::erc20 => {
-                    let token_dispatcher_metadata = IERC20MetadataDispatcher {
-                        contract_address: token_data.token_address,
-                    };
-                    (token_dispatcher_metadata.name(), token_dispatcher_metadata.symbol())
-                },
-                TokenType::erc721 => {
-                    let token_dispatcher_metadata = IERC721MetadataDispatcher {
-                        contract_address: token_data.token_address,
-                    };
-                    (token_dispatcher_metadata.name(), token_dispatcher_metadata.symbol())
-                },
-            };
+            let (name, symbol) = get_token_metadata(
+                token_data.token_address, token_data.token_type,
+            );
             let new_token = @Token {
                 address: token_data.token_address,
                 name: name,
@@ -973,17 +963,16 @@ pub mod Budokan {
         fn _register_token(
             ref self: ContractState, token: ContractAddress, token_data: TokenTypeData,
         ) -> (ByteArray, ByteArray) {
-            let mut name = "";
-            let mut symbol = "";
+            // First get the metadata before doing the validation steps
+            let token_type = match token_data {
+                TokenTypeData::erc20(_) => TokenType::erc20,
+                TokenTypeData::erc721(_) => TokenType::erc721,
+            };
+            let (name, symbol) = get_token_metadata(token, token_type);
 
             match token_data {
                 TokenTypeData::erc20(_) => {
                     let token_dispatcher = IERC20Dispatcher { contract_address: token };
-                    let token_dispatcher_metadata = IERC20MetadataDispatcher {
-                        contract_address: token,
-                    };
-                    name = token_dispatcher_metadata.name();
-                    symbol = token_dispatcher_metadata.symbol();
                     // check that the contract is approved for the minimal amount
                     let allowance = token_dispatcher
                         .allowance(get_caller_address(), get_contract_address());
@@ -1017,11 +1006,6 @@ pub mod Budokan {
                 },
                 TokenTypeData::erc721(erc721_token) => {
                     let token_dispatcher = IERC721Dispatcher { contract_address: token };
-                    let token_dispatcher_metadata = IERC721MetadataDispatcher {
-                        contract_address: token,
-                    };
-                    name = token_dispatcher_metadata.name();
-                    symbol = token_dispatcher_metadata.symbol();
                     // check that the contract is approved for the specific id
                     let approved = token_dispatcher.get_approved(erc721_token.id.into());
                     let token_address: felt252 = token.into();

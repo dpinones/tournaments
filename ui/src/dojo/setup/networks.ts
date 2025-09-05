@@ -147,8 +147,8 @@ const snMainnetConfig: DojoChainConfig = {
   chainId: ChainId.SN_MAIN,
   name: "Mainnet",
   rpcUrl: "https://api.cartridge.gg/x/starknet/mainnet",
-  toriiUrl: "https://api.cartridge.gg/x/pg-mainnet/torii",
-  toriiTokensUrl: "https://api.cartridge.gg/x/pg-mainnet-tokens/torii",
+  toriiUrl: "https://api.cartridge.gg/x/pg-mainnet-3/torii",
+  toriiTokensUrl: "https://api.cartridge.gg/x/pg-mainnet-3/torii",
   relayUrl: undefined,
   blastRpc:
     "https://starknet-mainnet.blastapi.io/5ef61753-e7c1-4593-bc62-97fdf96f8de5",
@@ -159,6 +159,8 @@ const snMainnetConfig: DojoChainConfig = {
   accountClassHash: undefined,
   ethAddress: mainnet.nativeCurrency.address,
   connectorIds: [supportedConnectorIds.CONTROLLER],
+  denshokanAddress:
+    "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc",
 } as const;
 
 //--------------------------------

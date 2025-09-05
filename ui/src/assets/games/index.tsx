@@ -85,7 +85,7 @@ export const getGames = (): Game[] => {
           "0x03c4d9b9ebdf13d6d997d14f945cbe7b01f86eb1c6a095c3ea0b273bc6700983",
         name: "Death Mountain",
         image: "https://lootsurvivor.io/favicon-32x32.png",
-        url: "https://lootsurvivor.io",
+        url: "https://tournaments.lootsurvivor.io/survivor/play?id=",
         controllerOnly: true,
       },
       {

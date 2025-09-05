@@ -43,7 +43,7 @@ use budokan::tests::mocks::{
 use budokan::budokan::Budokan;
 use budokan::tests::interfaces::{
     IERC20MockDispatcher, IERC20MockDispatcherTrait, IERC721MockDispatcher,
-    IERC721MockDispatcherTrait, IERC721OldMockDispatcher, IERC721OldMockDispatcherTrait
+    IERC721MockDispatcherTrait, IERC721OldMockDispatcher, IERC721OldMockDispatcherTrait,
 };
 use budokan::interfaces::{IBudokanDispatcher, IBudokanDispatcherTrait};
 use game_components_token::interface::{
@@ -185,7 +185,8 @@ fn setup_uninitialized(
 
 pub fn setup() -> TestContracts {
     let denshokan_contracts = setup_denshokan::setup();
-    let (world, erc20_mock_address, erc721_mock_address, erc721_old_mock_address) = setup_uninitialized(
+    let (world, erc20_mock_address, erc721_mock_address, erc721_old_mock_address) =
+        setup_uninitialized(
         denshokan_contracts.denshokan.contract_address,
     );
 
@@ -254,7 +255,8 @@ fn initializer() {
 
     let erc721_old_token = store.get_token(contracts.erc721_old.contract_address);
     assert!(
-        erc721_old_token.address == contracts.erc721_old.contract_address, "Invalid erc721_old token address",
+        erc721_old_token.address == contracts.erc721_old.contract_address,
+        "Invalid erc721_old token address",
     );
     assert!(erc721_old_token.name == "Test ERC721 Old", "Invalid erc721_old token name");
     assert!(erc721_old_token.symbol == "T721O", "Invalid erc721_old token symbol");
@@ -1157,12 +1159,12 @@ fn create_tournament_season() {
 // Test registering tokens
 //
 
-#[test] 
+#[test]
 fn register_token() {
     let contracts = setup();
 
     utils::impersonate(OWNER());
-    
+
     // Deploy new token contracts that are not pre-registered
     let new_erc20_address = deploy_contract(
         erc20_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
@@ -1170,45 +1172,52 @@ fn register_token() {
     let new_erc721_address = deploy_contract(
         erc721_mock::TEST_CLASS_HASH.try_into().unwrap(), array![].span(),
     );
-    
+
     // Create dispatchers for the new tokens
     let new_erc20 = IERC20MockDispatcher { contract_address: new_erc20_address };
     let new_erc721 = IERC721MockDispatcher { contract_address: new_erc721_address };
-    
+
     // Mint tokens to owner
     new_erc20.mint(OWNER(), 1000);
     new_erc721.mint(OWNER(), 1);
-    
+
     // Verify new tokens are not yet registered
     assert(!contracts.budokan.is_token_registered(new_erc20_address), 'New ERC20 not registered');
     assert(!contracts.budokan.is_token_registered(new_erc721_address), 'New ERC721 not registered');
-    
+
     // Set approvals needed for registration (ERC20 needs allowance of 1, ERC721 needs approval)
     new_erc20.approve(contracts.budokan.contract_address, 1);
     new_erc721.approve(contracts.budokan.contract_address, 1);
-    
+
     // Register new ERC20 token
-    contracts.budokan.register_token(
-        new_erc20_address, 
-        TokenTypeData::erc20(ERC20Data { amount: 1 })
-    );
-    
+    contracts
+        .budokan
+        .register_token(new_erc20_address, TokenTypeData::erc20(ERC20Data { amount: 1 }));
+
     // Register new ERC721 token
-    contracts.budokan.register_token(
-        new_erc721_address, 
-        TokenTypeData::erc721(ERC721Data { id: 1 })
-    );
+    contracts
+        .budokan
+        .register_token(new_erc721_address, TokenTypeData::erc721(ERC721Data { id: 1 }));
 
     // Verify new tokens are now registered
     assert(contracts.budokan.is_token_registered(new_erc20_address), 'New ERC20 not registered');
     assert(contracts.budokan.is_token_registered(new_erc721_address), 'New ERC721 not registered');
-    
+
     // Verify original setup tokens are still registered
     // Note: The old ERC721 token compatibility is proven by the setup process where
     // erc721_old (felt252 metadata format) is successfully registered during initialization
-    assert(contracts.budokan.is_token_registered(contracts.erc20.contract_address), 'Setup ERC20 not registered');
-    assert(contracts.budokan.is_token_registered(contracts.erc721.contract_address), 'Setup ERC721 not registered');
-    assert(contracts.budokan.is_token_registered(contracts.erc721_old.contract_address), 'Setup ERC721 old not registered');
+    assert(
+        contracts.budokan.is_token_registered(contracts.erc20.contract_address),
+        'Setup ERC20 not registered',
+    );
+    assert(
+        contracts.budokan.is_token_registered(contracts.erc721.contract_address),
+        'Setup ERC721 not registered',
+    );
+    assert(
+        contracts.budokan.is_token_registered(contracts.erc721_old.contract_address),
+        'Setup ERC721 old not registered',
+    );
 }
 
 #[test]
@@ -1217,7 +1226,7 @@ fn register_token_old_erc721_compatibility() {
 
     // This test validates that old ERC721 tokens (those with felt252 metadata)
     // are successfully registered and can be queried through the system
-    
+
     let mut world = contracts.world;
     let store: BudokanStore = BudokanStoreTrait::new(world);
 
@@ -1227,10 +1236,13 @@ fn register_token_old_erc721_compatibility() {
     assert(erc721_old_token.token_type == TokenType::erc721, 'Wrong token type');
     assert(erc721_old_token.name == "Test ERC721 Old", 'Wrong name');
     assert(erc721_old_token.symbol == "T721O", 'Wrong symbol');
-    
+
     // Verify the register_token system accepts and processes old ERC721 format
     // (this is proven by successful initialization where all three token types are processed)
-    assert(contracts.budokan.is_token_registered(contracts.erc721_old.contract_address), 'Old ERC721 not in system');
+    assert(
+        contracts.budokan.is_token_registered(contracts.erc721_old.contract_address),
+        'Old ERC721 not in system',
+    );
 }
 
 #[test]
@@ -1239,12 +1251,13 @@ fn register_token_already_registered() {
     let contracts = setup();
 
     utils::impersonate(OWNER());
-    
+
     // Try to register a token that was already registered during setup - should panic
-    contracts.budokan.register_token(
-        contracts.erc20.contract_address, 
-        TokenTypeData::erc20(ERC20Data { amount: 1 })
-    );
+    contracts
+        .budokan
+        .register_token(
+            contracts.erc20.contract_address, TokenTypeData::erc20(ERC20Data { amount: 1 }),
+        );
 }
 
 //

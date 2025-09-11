@@ -4,10 +4,8 @@ use budokan::interfaces::{
     IERC20MetadataFeltDispatcher, IERC20MetadataFeltDispatcherTrait, IERC721MetadataFeltDispatcher,
     IERC721MetadataFeltDispatcherTrait,
 };
-use openzeppelin_token::erc20::interface::{IERC20MetadataDispatcher, IERC20MetadataDispatcherTrait};
-use openzeppelin_token::erc721::interface::{
-    IERC721MetadataDispatcher, IERC721MetadataDispatcherTrait,
-};
+use openzeppelin_token::erc20::interface::{IERC20MetadataDispatcher};
+use openzeppelin_token::erc721::interface::{IERC721MetadataDispatcher};
 use budokan::libs::utils::U256BytesUsedTraitImpl;
 
 /// Try to get token metadata, handling both ByteArray and felt252 returns

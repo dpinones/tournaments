@@ -6,7 +6,7 @@ seed = "DNC"
 
 [env]
 rpc_url = "https://api.cartridge.gg/x/starknet/mainnet/rpc/v0_8"
-world_address = "0x6f32bbc0defe926365f4b43d758453e3daae99e92dcd062bcb4c0eaa2b5c3e4"
+world_address = "0x02ef591697f0fd9adc0ba9dbe0ca04dabad80cf95f08ba02e435d9cb6698a28a"
 
 [namespace]
 default = "budokan_1_0_8"
@@ -16,7 +16,7 @@ default = "budokan_1_0_8"
 
 [init_call_args]
 "budokan_1_0_8-Budokan" = [
-    "0x0329437ad8ef5584260ccb2b699f6662964ce2de782933c9a4d0a86efd1b72dc", # denshokan address
+    "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd", # denshokan address
     "10", # array length
     "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", # ETH
     "0", # erc20

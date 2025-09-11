@@ -43,7 +43,7 @@ use budokan::tests::mocks::{
 use budokan::budokan::Budokan;
 use budokan::tests::interfaces::{
     IERC20MockDispatcher, IERC20MockDispatcherTrait, IERC721MockDispatcher,
-    IERC721MockDispatcherTrait, IERC721OldMockDispatcher, IERC721OldMockDispatcherTrait,
+    IERC721MockDispatcherTrait, IERC721OldMockDispatcher,
 };
 use budokan::interfaces::{IBudokanDispatcher, IBudokanDispatcherTrait};
 use game_components_token::interface::{

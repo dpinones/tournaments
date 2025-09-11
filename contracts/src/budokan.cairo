@@ -19,13 +19,9 @@ pub mod Budokan {
     use budokan::libs::metadata_helper::get_token_metadata;
 
     use openzeppelin_introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
-    use openzeppelin_token::erc20::interface::{
-        IERC20Dispatcher, IERC20DispatcherTrait, IERC20MetadataDispatcher,
-        IERC20MetadataDispatcherTrait,
-    };
+    use openzeppelin_token::erc20::interface::{IERC20Dispatcher, IERC20DispatcherTrait};
     use openzeppelin_token::erc721::interface::{
-        IERC721Dispatcher, IERC721DispatcherTrait, IERC721MetadataDispatcher,
-        IERC721MetadataDispatcherTrait, IERC721_ID,
+        IERC721Dispatcher, IERC721DispatcherTrait, IERC721_ID,
     };
 
     use game_components_minigame::interface::{

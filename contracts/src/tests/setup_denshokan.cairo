@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 
 use starknet::{ContractAddress, contract_address_const};
-use starknet::syscalls::deploy_syscall;
-use game_components_minigame::interface::{IMinigameDispatcher, IMinigameDispatcherTrait};
-use game_components_token::interface::{
-    IMinigameTokenMixinDispatcher, IMinigameTokenMixinDispatcherTrait,
-};
+use game_components_minigame::interface::{IMinigameDispatcher};
+use game_components_token::interface::{IMinigameTokenMixinDispatcher};
 use game_components_token::examples::{
     full_token_contract::FullTokenContract,
-    minigame_registry_contract::{
-        MinigameRegistryContract, IMinigameRegistryDispatcher, IMinigameRegistryDispatcherTrait,
-    },
+    minigame_registry_contract::{MinigameRegistryContract, IMinigameRegistryDispatcher},
 };
 use game_components_test_starknet::minigame::mocks::minigame_starknet_mock::{
     minigame_starknet_mock, IMinigameStarknetMockDispatcher, IMinigameStarknetMockInitDispatcher,

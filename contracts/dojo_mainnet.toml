@@ -16,7 +16,7 @@ default = "budokan_1_0_8"
 
 [init_call_args]
 "budokan_1_0_8-Budokan" = [
-    "0x036017e69d21d6d8c13e266eabb73ef1f1d02722d86bdcabe5f168f8e549d3cd", # denshokan address
+    "0x036017E69D21D6D8c13E266EaBB73ef1f1D02722D86BDcAbe5f168f8e549d3cD", # denshokan address
     "10", # array length
     "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", # ETH
     "0", # erc20

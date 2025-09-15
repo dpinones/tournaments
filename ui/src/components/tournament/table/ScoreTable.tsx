@@ -36,6 +36,7 @@ const ScoreTable = ({
   const [showScores, setShowScores] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
   const [isMobileDialogOpen, setIsMobileDialogOpen] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { tournamentAddress } = useTournamentContracts();
 
   const {
@@ -70,10 +71,11 @@ const ScoreTable = ({
   const { usernames } = useGetUsernames(ownerAddresses ?? []);
 
   useEffect(() => {
-    if (games.length > 0) {
+    if (games.length > 0 && !hasInitialized) {
       setShowScores(true);
+      setHasInitialized(true);
     }
-  }, []);
+  }, [games, hasInitialized]);
 
   return (
     <TournamentCard showCard={showScores}>

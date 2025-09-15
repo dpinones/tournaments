@@ -53,7 +53,8 @@ function App() {
     // Define contract addresses to filter out
     const filteredAddresses = [
       // Add contract addresses you want to filter out here
-      "0x0602d92f353f740efe5faca12293b7d4fc19b219c0722e746951817373605163",
+      // TEMP FILTER NEW DM
+      "0x05e2dfbdc3c193de629e5beb116083b06bd944c1608c9c793351d5792ba29863",
     ];
 
     // Filter minigames to exclude specific contract addresses

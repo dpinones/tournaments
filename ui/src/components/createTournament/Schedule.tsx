@@ -31,10 +31,12 @@ import { SECONDS_IN_DAY, SECONDS_IN_HOUR } from "@/lib/constants";
 import { useDojo } from "@/context/dojo";
 import { ChainId } from "@/dojo/setup/networks";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 
 const Schedule = ({ form }: StepProps) => {
   const { selectedChainConfig } = useDojo();
   const [isMobileDialogOpen, setIsMobileDialogOpen] = useState(false);
+  const [customSubmissionPeriod, setCustomSubmissionPeriod] = useState(false);
   const [minStartTime, setMinStartTime] = useState<Date>(() => {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 15);
@@ -152,13 +154,15 @@ const Schedule = ({ form }: StepProps) => {
       if (durationInSeconds >= 900) {
         form.setValue("duration", durationInSeconds);
 
-        // If submission period is longer than the new duration, adjust it
-        const currentSubmissionPeriod = form.watch("submissionPeriod");
-        if (currentSubmissionPeriod > durationInSeconds) {
-          form.setValue(
-            "submissionPeriod",
-            Math.min(durationInSeconds, SECONDS_IN_HOUR)
-          );
+        // If submission period is longer than the new duration, adjust it (only if not using custom)
+        if (!customSubmissionPeriod) {
+          const currentSubmissionPeriod = form.watch("submissionPeriod");
+          if (currentSubmissionPeriod > durationInSeconds) {
+            form.setValue(
+              "submissionPeriod",
+              Math.min(durationInSeconds, SECONDS_IN_HOUR)
+            );
+          }
         }
       }
     }
@@ -445,25 +449,68 @@ const Schedule = ({ form }: StepProps) => {
                               <Label className="xl:text-xs 2xl:text-sm font-medium">
                                 Submission{" "}
                               </Label>
-                              <span className="text-sm text-muted-foreground xl:text-xs 2xl:text-sm">
-                                {Number.isInteger(submissionHours)
-                                  ? submissionHours
-                                  : submissionHours.toFixed(2)}{" "}
-                                {submissionHours === 1 ? "hour" : "hours"}
-                              </span>
+                              {!customSubmissionPeriod ? (
+                                <span className="text-sm text-muted-foreground xl:text-xs 2xl:text-sm">
+                                  {Number.isInteger(submissionHours)
+                                    ? submissionHours
+                                    : submissionHours.toFixed(2)}{" "}
+                                  {submissionHours === 1 ? "hour" : "hours"}
+                                </span>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-5 px-2 text-xs"
+                                  onClick={() => setCustomSubmissionPeriod(false)}
+                                >
+                                  Use Slider
+                                </Button>
+                              )}
                             </div>
-                            <Slider
-                              value={[form.watch("submissionPeriod") || 1]}
-                              onValueChange={([submissionHours]) => {
-                                form.setValue(
-                                  "submissionPeriod",
-                                  submissionHours
-                                );
-                              }}
-                              max={field.value}
-                              min={SECONDS_IN_HOUR}
-                              step={SECONDS_IN_HOUR}
-                            />
+                            {!customSubmissionPeriod ? (
+                              <>
+                                <Slider
+                                  value={[form.watch("submissionPeriod") || 1]}
+                                  onValueChange={([submissionHours]) => {
+                                    form.setValue(
+                                      "submissionPeriod",
+                                      submissionHours
+                                    );
+                                  }}
+                                  max={field.value}
+                                  min={SECONDS_IN_HOUR}
+                                  step={SECONDS_IN_HOUR}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-1 h-6 text-xs"
+                                  onClick={() => setCustomSubmissionPeriod(true)}
+                                >
+                                  Custom
+                                </Button>
+                              </>
+                            ) : (
+                              <div className="flex flex-col gap-2">
+                                <Input
+                                  type="number"
+                                  placeholder="Seconds"
+                                  value={form.watch("submissionPeriod") || ""}
+                                  onChange={(e) => {
+                                    const value = parseInt(e.target.value);
+                                    if (!isNaN(value) && value >= 900 && value <= 604800) {
+                                      form.setValue("submissionPeriod", value);
+                                    }
+                                  }}
+                                  className="h-8 text-sm"
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  Min: 900s (15 min), Max: 604800s (1 week)
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

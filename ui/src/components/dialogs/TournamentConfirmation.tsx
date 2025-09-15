@@ -194,6 +194,10 @@ const TournamentConfirmation = ({
                 </div>
                 <span className="text-muted-foreground">Duration:</span>
                 <span>{formatTime(formData.duration)}</span>
+                <span className="text-muted-foreground">
+                  Submission Period:
+                </span>
+                <span>{formatTime(formData.submissionPeriod)}</span>
               </div>
             </div>
 

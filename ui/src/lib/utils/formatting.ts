@@ -314,8 +314,7 @@ export const extractEntryFeePrizes = (
 
 export const getClaimablePrizes = (
   prizes: any[],
-  claimedPrizes: PrizeClaim[],
-  totalSubmissions: number
+  claimedPrizes: PrizeClaim[]
 ) => {
   const creatorPrizeTypes = new Set([
     "entry_fee_game_creator",
@@ -326,9 +325,7 @@ export const getClaimablePrizes = (
     creatorPrizeTypes.has(prize.type)
   );
   const prizesFromSubmissions = prizes.filter(
-    (prize) =>
-      !creatorPrizeTypes.has(prize.type) &&
-      prize.payout_position <= totalSubmissions
+    (prize) => !creatorPrizeTypes.has(prize.type)
   );
   const claimedEntryFeePositions = claimedPrizes.map((prize) =>
     prize.prize_type?.activeVariant() === "EntryFees"

@@ -173,8 +173,7 @@ const Tournament = () => {
 
   const { claimablePrizes, claimablePrizeTypes } = getClaimablePrizes(
     [...allPrizes, ...tournamentCreatorShare, ...gameCreatorShare],
-    claimedPrizes,
-    totalSubmissions
+    claimedPrizes
   );
 
   const allClaimed = claimablePrizes.length === 0;

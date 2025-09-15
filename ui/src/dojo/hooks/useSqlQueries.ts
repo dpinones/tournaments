@@ -702,7 +702,7 @@ export const useGetTournamentQualificationEntries = ({
       active && namespace && tournamentId
         ? `
     SELECT * FROM '${namespace}-QualificationEntries' qe
-    WHERE qe.tournament_id = '${addAddressPadding(tournamentId)}'
+    WHERE qe.tournament_id = '${padU64(BigInt(tournamentId))}'
     ${getTournamentQualificationWhereClause(qualifications)}
   `
         : null,

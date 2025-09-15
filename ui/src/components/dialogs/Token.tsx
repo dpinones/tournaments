@@ -17,8 +17,7 @@ import { Token } from "@/generated/models.gen";
 import { ChainId } from "@/dojo/setup/networks";
 import { QUESTION } from "@/components/Icons";
 import { sepoliaTokens } from "@/lib/sepoliaTokens";
-import { addAddressPadding, CairoCustomEnum } from "starknet";
-import { bigintToHex, indexAddress } from "@/lib/utils";
+import { indexAddress } from "@/lib/utils";
 import { useTokenUris } from "@/hooks/useTokenUris";
 import { FormToken } from "@/lib/types";
 import { mainnetNFTs } from "@/lib/nfts";
@@ -51,17 +50,13 @@ const TokenDialog = ({ selectedToken, onSelect, type }: TokenDialogProps) => {
           name: token.name,
           symbol: token.symbol,
           is_registered: true,
-          token_type: new CairoCustomEnum({
-            erc20: {
-              amount: addAddressPadding(bigintToHex(BigInt(1))),
-            },
-          }),
+          token_type: "erc20",
         }))
       : [];
   }, [isMainnet, isSepolia, namespace]);
 
   const typeFilteredTokens = type
-    ? tokens.filter((token) => token.token_type.activeVariant() === type)
+    ? tokens.filter((token) => token.token_type === type)
     : tokens;
 
   const searchFilteredTokens = typeFilteredTokens.filter((token) =>
@@ -69,7 +64,7 @@ const TokenDialog = ({ selectedToken, onSelect, type }: TokenDialogProps) => {
   );
 
   const erc721Tokens = searchFilteredTokens.filter(
-    (token) => token.token_type.activeVariant() === "erc721"
+    (token) => token.token_type === "erc721"
   );
 
   const whitelistedNFTTokens = mainnetNFTs.filter((nft) =>
@@ -81,7 +76,7 @@ const TokenDialog = ({ selectedToken, onSelect, type }: TokenDialogProps) => {
   const tokenUris = useTokenUris(erc721Tokens.map((token) => token.address));
 
   const getTokenImage = (token: Token) => {
-    if (token.token_type.activeVariant() === "erc20") {
+    if (token.token_type === "erc20") {
       return getTokenLogoUrl(selectedChainConfig?.chainId ?? "", token.address);
     } else {
       const whitelistedImage = whitelistedNFTTokens.find(
@@ -168,7 +163,7 @@ const TokenDialog = ({ selectedToken, onSelect, type }: TokenDialogProps) => {
                       </div>
                     </div>
                     <span className="uppercase text-neutral">
-                      {token.token_type.activeVariant()}
+                      {token.token_type}
                     </span>
                   </div>
                 </DialogClose>

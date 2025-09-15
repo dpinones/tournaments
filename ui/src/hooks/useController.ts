@@ -69,6 +69,7 @@ export const useConnectController = () => {
 };
 
 export const useControllerUsername = () => {
+  const { address } = useAccount();
   const [username, setUsername] = useState<string | undefined>(undefined);
   const controllerConnector = useConnectedController();
 
@@ -81,11 +82,11 @@ export const useControllerUsername = () => {
       console.error("Failed to fetch username:", error);
       setUsername(undefined);
     }
-  }, [controllerConnector]);
+  }, [controllerConnector, address]);
 
   useEffect(() => {
     getUsername();
-  }, [getUsername]);
+  }, [getUsername, address]);
 
   return {
     username,

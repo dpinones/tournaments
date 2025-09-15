@@ -24,7 +24,6 @@ import { TokenValue } from "@/components/createTournament/containers/TokenValue"
 import { useSystemCalls } from "@/dojo/hooks/useSystemCalls";
 import { useDojo } from "@/context/dojo";
 import { FormToken } from "@/lib/types";
-import { CairoCustomEnum } from "starknet";
 
 interface NewPrize {
   token: FormToken;
@@ -42,12 +41,7 @@ const BonusPrizes = ({ form }: StepProps) => {
   const [newPrize, setNewPrize] = useState<NewPrize>({
     token: {
       address: "",
-      token_type: new CairoCustomEnum({
-        erc20: {
-          amount: "",
-        },
-        erc721: undefined,
-      }),
+      token_type: "",
       name: "",
       symbol: "",
       is_registered: false,
@@ -176,9 +170,7 @@ const BonusPrizes = ({ form }: StepProps) => {
                             ...prev,
                             token: token,
                             tokenType:
-                              token.token_type.activeVariant() === "erc20"
-                                ? "ERC20"
-                                : "ERC721",
+                              token.token_type === "erc20" ? "ERC20" : "ERC721",
                             // Reset other values when token changes
                             amount: undefined,
                             tokenId: undefined,
@@ -226,12 +218,7 @@ const BonusPrizes = ({ form }: StepProps) => {
                           setNewPrize({
                             token: {
                               address: "",
-                              token_type: new CairoCustomEnum({
-                                erc20: {
-                                  amount: "",
-                                },
-                                erc721: undefined,
-                              }),
+                              token_type: "",
                               name: "",
                               symbol: "",
                               is_registered: false,
@@ -368,12 +355,7 @@ const BonusPrizes = ({ form }: StepProps) => {
                       setNewPrize({
                         token: {
                           address: "",
-                          token_type: new CairoCustomEnum({
-                            erc20: {
-                              amount: "",
-                            },
-                            erc721: undefined,
-                          }),
+                          token_type: "",
                           name: "",
                           symbol: "",
                           is_registered: false,

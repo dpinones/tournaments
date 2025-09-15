@@ -17,6 +17,7 @@ import {
   formatNumber,
   displayAddress,
   stringToFelt,
+  padU64,
 } from "@/lib/utils";
 import { addAddressPadding, BigNumberish } from "starknet";
 import { Input } from "@/components/ui/input";
@@ -233,7 +234,7 @@ export function EnterTournamentDialog({
   const { data: leaderboards } = useGetTournamentLeaderboards({
     namespace: namespace ?? "",
     tournamentIds: tournamentsData.map((tournament) =>
-      addAddressPadding(bigintToHex(tournament.id))
+      padU64(BigInt(tournament.id))
     ),
     active: requirementVariant === "tournament",
   });
@@ -418,7 +419,7 @@ export function EnterTournamentDialog({
 
   const { data: qualificationEntries } = useGetTournamentQualificationEntries({
     namespace: namespace ?? "",
-    tournamentId: addAddressPadding(bigintToHex(tournamentModel?.id ?? 0n)),
+    tournamentId: padU64(BigInt(tournamentModel?.id ?? 0n)),
     qualifications: qualificationMethods,
     active: qualificationMethods.length > 0,
   });

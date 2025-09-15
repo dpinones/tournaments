@@ -51,7 +51,7 @@ const EntryRequirements = ({
     (model) => model.models[namespace].Token
   ) as Token[];
   const erc721Tokens = registeredTokens.filter(
-    (token) => token.token_type.activeVariant() === "erc721"
+    (token) => token.token_type === "erc721"
   );
 
   const navigate = useNavigate();

@@ -26,8 +26,8 @@ import {
   indexAddress,
   stringToFelt,
   padAddress,
+  padU64,
 } from "@/lib/utils";
-import { addAddressPadding } from "starknet";
 import { useDojo } from "@/context/dojo";
 import EmptyResults from "@/components/overview/tournaments/EmptyResults";
 import { TournamentCard } from "@/components/overview/TournamanentCard";
@@ -126,9 +126,7 @@ const Overview = () => {
   }, []);
 
   const fromTournamentId = useMemo(() => {
-    return isMainnet
-      ? addAddressPadding(bigintToHex(BigInt(STARTING_TOURNAMENT_ID)))
-      : undefined;
+    return isMainnet ? padU64(BigInt(STARTING_TOURNAMENT_ID)) : undefined;
   }, [isMainnet]);
 
   const {
@@ -167,9 +165,7 @@ const Overview = () => {
   });
 
   const gameTokenIds = useMemo(() => {
-    return gameTokens?.map((game) =>
-      addAddressPadding(game.token_id.toString(16))
-    );
+    return gameTokens?.map((game) => padU64(BigInt(game.token_id)));
   }, [gameTokens]);
 
   const { data: myTournamentsCount } = useGetMyTournamentsCount({

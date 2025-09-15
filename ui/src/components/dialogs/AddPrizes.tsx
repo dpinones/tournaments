@@ -512,9 +512,7 @@ export function AddPrizesDialog({
                     ...prev,
                     tokenAddress: token.address,
                     tokenType:
-                      token.token_type.activeVariant() === "erc20"
-                        ? "ERC20"
-                        : "ERC721",
+                      token.token_type === "erc20" ? "ERC20" : "ERC721",
                     // Reset other values when token changes
                     amount: undefined,
                     tokenId: undefined,

@@ -883,10 +883,7 @@ export const formatTokens = (
         address: token.l2_token_address,
         name: token.name,
         symbol: token.symbol,
-        token_type: new CairoCustomEnum({
-          erc20: "1",
-          erc721: undefined,
-        }),
+        token_type: "erc20",
         is_registered: registeredTokens.some(
           (registeredToken) =>
             registeredToken.address === token.l2_token_address
@@ -897,10 +894,7 @@ export const formatTokens = (
         address: token.l2_token_address,
         name: token.name,
         symbol: token.symbol,
-        token_type: new CairoCustomEnum({
-          erc20: "1",
-          erc721: undefined,
-        }),
+        token_type: "erc20",
         is_registered: registeredTokens.some(
           (registeredToken) =>
             registeredToken.address === token.l2_token_address

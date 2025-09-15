@@ -281,16 +281,17 @@ export const TournamentCard = ({
                 <TooltipTrigger asChild>
                   <div>
                     <Badge variant="outline" className="text-xs p-1 rounded-md">
-                      {`${Number(entryLimit)} entry${
-                        Number(entryLimit) === 1 ? "" : "s"
-                      }`}
+                      {Number(entryLimit) === 1
+                        ? `${Number(entryLimit)} entry`
+                        : `${Number(entryLimit)} entries`}
                     </Badge>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" align="center">
                   <p>
-                    {Number(entryLimit)} entry
-                    {Number(entryLimit) === 1 ? "" : "s"} per qualification
+                    {Number(entryLimit) === 1
+                      ? `${Number(entryLimit)} entry`
+                      : `${Number(entryLimit)} entries`} per qualification
                   </p>
                 </TooltipContent>
               </Tooltip>

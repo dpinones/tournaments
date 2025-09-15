@@ -150,7 +150,7 @@ const RegisterToken = () => {
                         >
                           {tokenModel?.name}
                           <span className="absolute top-0 text-xs uppercase text-terminal-green/75">
-                            {tokenModel?.token_type?.activeVariant()}
+                            {tokenModel?.token_type}
                           </span>
                           <span className="absolute bottom-0 text-xs uppercase text-terminal-green/75">
                             {displayAddress(tokenModel?.address!)}

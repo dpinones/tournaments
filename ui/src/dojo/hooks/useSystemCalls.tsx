@@ -3,7 +3,6 @@ import { useDojo } from "@/context/dojo";
 import {
   Tournament,
   Prize,
-  Token,
   EntryFee,
   QualificationProofEnum,
   PrizeTypeEnum,
@@ -378,59 +377,6 @@ export const useSystemCalls = () => {
     return BigInt(result?.[0]!);
   };
 
-  const approveERC20Multiple = async (tokens: Token[]) => {
-    const summedCalls = Object.values(
-      tokens.reduce((acc: { [key: string]: any }, token) => {
-        const tokenAddress = token.address;
-        if (!acc[tokenAddress]) {
-          acc[tokenAddress] = {
-            contractAddress: tokenAddress,
-            entrypoint: "approve",
-            calldata: CallData.compile([
-              tournamentAddress,
-              token.token_type.variant.erc20?.amount!,
-              "0",
-            ]),
-            totalAmount: BigInt(token.token_type.variant.erc20?.amount! || 0),
-          };
-        } else {
-          // Sum the amounts for the same token
-          acc[tokenAddress].totalAmount += BigInt(
-            token.token_type.variant.erc20?.amount! || 0
-          );
-          // Update calldata with new total
-          acc[tokenAddress].calldata = CallData.compile([
-            tournamentAddress,
-            acc[tokenAddress].totalAmount.toString(),
-            "0",
-          ]);
-        }
-        return acc;
-      }, {})
-    ).map(({ contractAddress, entrypoint, calldata }) => ({
-      contractAddress,
-      entrypoint,
-      calldata,
-    }));
-    await account?.execute(summedCalls);
-  };
-
-  const approveERC721Multiple = async (tokens: Token[]) => {
-    let calls = [];
-    for (const token of tokens) {
-      calls.push({
-        contractAddress: token.address,
-        entrypoint: "approve",
-        calldata: CallData.compile([
-          tournamentAddress,
-          token.token_type.variant.erc721?.token_id!,
-          "0",
-        ]),
-      });
-    }
-    await account?.execute(calls);
-  };
-
   const mintErc20 = async (
     tokenAddress: string,
     recipient: string,
@@ -473,8 +419,6 @@ export const useSystemCalls = () => {
     claimPrizes,
     endGame,
     getBalanceGeneral,
-    approveERC20Multiple,
-    approveERC721Multiple,
     mintErc721,
     mintErc20,
     getErc20Balance,

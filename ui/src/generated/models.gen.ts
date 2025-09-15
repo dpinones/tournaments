@@ -184,7 +184,7 @@ export interface Prize {
   tournament_id: BigNumberish;
   payout_position: BigNumberish;
   token_address: string;
-  token_type: TokenTypeEnum;
+  token_type: TokenTypeDataEnum;
 }
 
 // Type definition for `tournaments::components::models::tournament::PrizeClaim` struct
@@ -244,7 +244,7 @@ export interface Token {
   address: string;
   name: string;
   symbol: string;
-  token_type: TokenTypeEnum;
+  token_type: string;
   is_registered: boolean;
 }
 
@@ -252,7 +252,7 @@ export interface Token {
 export interface TokenValue {
   name: string;
   symbol: string;
-  token_type: TokenTypeEnum;
+  token_type: string;
   is_registered: boolean;
 }
 
@@ -330,12 +330,18 @@ export enum Role {
   Position,
 }
 
-// Type definition for `tournaments::components::models::tournament::TokenType` enum
-export type TokenType = {
+// Type definition for `budokan::models::budokan::TokenType` enum
+export const tokenType = ["erc20", "erc721"] as const;
+export type TokenType = { [key in (typeof tokenType)[number]]: string };
+export type TokenTypeEnum = CairoCustomEnum;
+
+// Type definition for `budokan::models::budokan::TokenTypeData` enum
+export const tokenTypeData = ["erc20", "erc721"] as const;
+export type TokenTypeData = {
   erc20: ERC20Data;
   erc721: ERC721Data;
 };
-export type TokenTypeEnum = CairoCustomEnum;
+export type TokenTypeDataEnum = CairoCustomEnum;
 
 // Type definition for `tournaments::components::models::tournament::TournamentType` enum
 export enum TournamentType {
@@ -681,20 +687,14 @@ export const schemaTemplate: {
     address: "",
     name: "",
     symbol: "",
-    token_type: new CairoCustomEnum({
-      erc20: { fieldOrder: ["amount"], amount: 0 },
-      erc721: undefined,
-    }),
+    token_type: "",
     is_registered: false,
   },
   TokenValue: {
     fieldOrder: ["name", "symbol", "token_type", "is_registered"],
     name: "",
     symbol: "",
-    token_type: new CairoCustomEnum({
-      erc20: { fieldOrder: ["amount"], amount: 0 },
-      erc721: undefined,
-    }),
+    token_type: "",
     is_registered: false,
   },
   Tournament: {

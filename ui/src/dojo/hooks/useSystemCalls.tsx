@@ -374,7 +374,15 @@ export const useSystemCalls = () => {
       entrypoint: "balance_of",
       calldata: [address!],
     });
-    return BigInt(result?.[0]!);
+    const decimalsResult = await account?.callContract({
+      contractAddress: tokenAddress,
+      entrypoint: "decimals",
+      calldata: [],
+    });
+    const decimals = Number(decimalsResult?.[0]!);
+    const balance =
+      (BigInt(result?.[0]!) / 10n ** BigInt(decimals)) * 10n ** 18n;
+    return balance;
   };
 
   const mintErc20 = async (

@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { Chain } from "@starknet-react/chains";
+import { mainnet } from "@starknet-react/chains";
 import {
-  jsonRpcProvider,
+  // jsonRpcProvider,
   StarknetConfig,
   argent,
   braavos,
+  cartridgeProvider,
 } from "@starknet-react/core";
 import React from "react";
 import { ChainId, CHAINS, getDefaultChainId } from "@/dojo/setup/networks";
@@ -53,32 +54,32 @@ export function StarknetProvider({ children }: { children: React.ReactNode }) {
   const defaultChainId = getDefaultChainId();
 
   // Create provider with memoization
-  const provider = jsonRpcProvider({
-    rpc: (chain: Chain) => {
-      switch (chain) {
-        case CHAINS[ChainId.SN_MAIN].chain:
-          return {
-            nodeUrl: CHAINS[ChainId.SN_MAIN].chain?.rpcUrls.default.http[0],
-          };
-        case CHAINS[ChainId.SN_SEPOLIA].chain:
-          return {
-            nodeUrl: CHAINS[ChainId.SN_SEPOLIA].chain?.rpcUrls.default.http[0],
-          };
-        case CHAINS[ChainId.WP_PG_SLOT_2].chain:
-          return {
-            nodeUrl:
-              CHAINS[ChainId.WP_PG_SLOT_2].chain?.rpcUrls.default.http[0],
-          };
-        case CHAINS[ChainId.KATANA_LOCAL].chain:
-          return {
-            nodeUrl:
-              CHAINS[ChainId.KATANA_LOCAL].chain?.rpcUrls.default.http[0],
-          };
-        default:
-          throw new Error(`Unsupported chain: ${chain.network}`);
-      }
-    },
-  });
+  // const provider = jsonRpcProvider({
+  //   rpc: (chain: Chain) => {
+  //     switch (chain) {
+  //       case CHAINS[ChainId.SN_MAIN].chain:
+  //         return {
+  //           nodeUrl: CHAINS[ChainId.SN_MAIN].chain?.rpcUrls.default.http[0],
+  //         };
+  //       // case CHAINS[ChainId.SN_SEPOLIA].chain:
+  //       //   return {
+  //       //     nodeUrl: CHAINS[ChainId.SN_SEPOLIA].chain?.rpcUrls.default.http[0],
+  //       //   };
+  //       // case CHAINS[ChainId.WP_PG_SLOT_2].chain:
+  //       //   return {
+  //       //     nodeUrl:
+  //       //       CHAINS[ChainId.WP_PG_SLOT_2].chain?.rpcUrls.default.http[0],
+  //       //   };
+  //       // case CHAINS[ChainId.KATANA_LOCAL].chain:
+  //       //   return {
+  //       //     nodeUrl:
+  //       //       CHAINS[ChainId.KATANA_LOCAL].chain?.rpcUrls.default.http[0],
+  //       //   };
+  //       default:
+  //         throw new Error(`Unsupported chain: ${chain.network}`);
+  //     }
+  //   },
+  // });
 
   // Initialize predeployed accounts for Katana
   useEffect(() => {
@@ -94,16 +95,16 @@ export function StarknetProvider({ children }: { children: React.ReactNode }) {
     }
   }, [defaultChainId]);
 
-  // Prepare chains based on environment
-  const chains = useMemo(() => {
-    if (defaultChainId === ChainId.KATANA_LOCAL) {
-      return [CHAINS[ChainId.KATANA_LOCAL].chain!];
-    }
+  // // Prepare chains based on environment
+  // const chains = useMemo(() => {
+  //   if (defaultChainId === ChainId.KATANA_LOCAL) {
+  //     return [CHAINS[ChainId.KATANA_LOCAL].chain!];
+  //   }
 
-    return Object.values(CHAINS)
-      .map((chain) => chain.chain!)
-      .filter(Boolean); // Filter out any undefined chains
-  }, [defaultChainId]);
+  //   return Object.values(CHAINS)
+  //     .map((chain) => chain.chain!)
+  //     .filter(Boolean); // Filter out any undefined chains
+  // }, [defaultChainId]);
 
   // Combine all available connectors
   const connectors = useMemo(() => {
@@ -129,9 +130,9 @@ export function StarknetProvider({ children }: { children: React.ReactNode }) {
   return (
     <StarknetConfig
       autoConnect
-      chains={chains}
+      chains={[mainnet]}
       connectors={connectors}
-      provider={provider}
+      provider={cartridgeProvider()}
     >
       {children}
     </StarknetConfig>

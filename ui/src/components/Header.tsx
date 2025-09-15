@@ -7,8 +7,8 @@ import {
   SPACE_INVADER_SOLID,
   TROPHY_LINE,
   COIN,
-  SLOT,
-  STARKNET,
+  // SLOT,
+  // STARKNET,
   DISCORD,
 } from "@/components/Icons";
 import { displayAddress } from "@/lib/utils";
@@ -18,20 +18,20 @@ import {
 } from "@/hooks/useController";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDojo } from "@/context/dojo";
-import { ChainId, NetworkId } from "@/dojo/setup/networks";
-import { useSwitchNetwork } from "@/dojo/hooks/useChain";
+import { ChainId } from "@/dojo/setup/networks";
+// import { useSwitchNetwork } from "@/dojo/hooks/useChain";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+// import {
+//   DropdownMenu,
+//   DropdownMenuTrigger,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+// } from "@/components/ui/dropdown-menu";
 import useUIStore from "@/hooks/useUIStore";
 import { GameButton } from "@/components/overview/gameFilters/GameButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,14 +46,14 @@ const Header = () => {
   const { disconnect } = useDisconnect();
   const { openProfile } = useControllerProfile();
   const { username } = useControllerUsername();
-  const { switchToMainnet, switchToSepolia, switchToSlot } = useSwitchNetwork();
+  // const { switchToMainnet, switchToSepolia, switchToSlot } = useSwitchNetwork();
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedChainConfig } = useDojo();
   const isMainnet = selectedChainConfig.chainId === ChainId.SN_MAIN;
   const isSepolia = selectedChainConfig.chainId === ChainId.SN_SEPOLIA;
   const isHomeScreen = location.pathname === "/";
-  const isLocal = selectedChainConfig.chainId === ChainId.KATANA_LOCAL;
+  // const isLocal = selectedChainConfig.chainId === ChainId.KATANA_LOCAL;
 
   // State to control the visibility of the warning banner
   const [showWarning, setShowWarning] = useState(true);
@@ -184,7 +184,7 @@ const Header = () => {
                 Support
               </span>
             </Button>
-            {!isLocal && account && (
+            {/* {!isLocal && account && (
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <Button variant="outline">
@@ -232,7 +232,7 @@ const Header = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
+            )} */}
             {!isMainnet && !isSepolia && location.pathname !== "/play" && (
               <Button
                 onClick={() => {

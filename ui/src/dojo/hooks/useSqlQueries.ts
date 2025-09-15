@@ -364,6 +364,7 @@ export const useGetTournaments = ({
       fromTournamentId,
     ]
   );
+  console.log(query);
   const { data, loading, error, refetch } = useSqlExecute(query);
   return { data, loading, error, refetch };
 };

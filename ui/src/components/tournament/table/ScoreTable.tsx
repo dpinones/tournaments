@@ -1,8 +1,9 @@
 import Pagination from "@/components/table/Pagination";
-import { USER } from "@/components/Icons";
+import { USER, REFRESH } from "@/components/Icons";
+import { Button } from "@/components/ui/button";
 import { useState, useMemo, useEffect } from "react";
 import { BigNumberish } from "starknet";
-import { useSubscribeGameTokens } from "metagame-sdk";
+import { useGameTokens } from "metagame-sdk";
 import { useGetUsernames } from "@/hooks/useController";
 import { MobilePlayerCard } from "@/components/tournament/table/PlayerCard";
 import {
@@ -49,7 +50,9 @@ const ScoreTable = ({
       nextPage,
       previousPage,
     },
-  } = useSubscribeGameTokens({
+    refetch,
+    loading,
+  } = useGameTokens({
     context: {
       name: "Budokan",
       attributes: {
@@ -58,10 +61,10 @@ const ScoreTable = ({
     },
     pagination: {
       pageSize: 10,
-      sortBy: "score",
-      sortOrder: "desc",
     },
-    minted_by_address: padAddress(tournamentAddress),
+    sortBy: "score",
+    sortOrder: "desc",
+    mintedByAddress: padAddress(tournamentAddress),
   });
 
   const ownerAddresses = useMemo(
@@ -95,6 +98,14 @@ const ScoreTable = ({
           />
         )}
         <div className="flex flex-row items-center gap-2">
+          <Button
+            onClick={refetch}
+            disabled={loading}
+            size="xs"
+            variant="outline"
+          >
+            <REFRESH className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+          </Button>
           <TournamentCardSwitch
             checked={showScores}
             onCheckedChange={setShowScores}

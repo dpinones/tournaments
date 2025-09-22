@@ -355,7 +355,7 @@ const Tournament = () => {
     };
   });
 
-  const { data: setting } = useSettings({
+  const { settings } = useSettings({
     gameAddresses: [gameAddress],
     settingsIds: [Number(tournamentModel?.game_config?.settings_id)],
   });
@@ -401,7 +401,7 @@ const Tournament = () => {
               {gameName ? gameName : "Unknown"}
             </TooltipContent>
           </Tooltip>
-          {setting[0] && (
+          {settings[0] && (
             <div
               className="hidden sm:flex h-10 text-brand flex-row items-center gap-1 w-full border-2 border-brand-muted p-2 bg-black rounded-lg hover:cursor-pointer"
               onClick={() => setSettingsDialogOpen(true)}
@@ -409,7 +409,9 @@ const Tournament = () => {
               <span className="w-8">
                 <SLIDERS />
               </span>
-              <span className="hidden sm:block text-xs">{setting[0].name}</span>
+              <span className="hidden sm:block text-xs">
+                {settings[0].name}
+              </span>
             </div>
           )}
           <EntryRequirements
@@ -516,7 +518,7 @@ const Tournament = () => {
             open={settingsDialogOpen}
             onOpenChange={setSettingsDialogOpen}
             game={gameAddress}
-            settings={setting[0]}
+            settings={settings[0]}
           />
         </div>
       </div>

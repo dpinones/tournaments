@@ -224,7 +224,8 @@ export const useSubscribeTournamentsQuery = (namespace: string) => {
           getModelsMapping(namespace).Registration,
           getModelsMapping(namespace).Prize,
         ])
-        .includeHashedKeys(),
+        .includeHashedKeys()
+        .withLimit(100000),
     [namespace]
   );
 

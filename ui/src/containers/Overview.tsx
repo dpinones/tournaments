@@ -159,7 +159,7 @@ const Overview = () => {
     return gameData?.map((game) => padAddress(game.contract_address));
   }, [gameData]);
 
-  const { data: gameTokens } = useGameTokens({
+  const { games: gameTokens } = useGameTokens({
     mintedByAddress: padAddress(tournamentAddress),
     owner: address,
   });

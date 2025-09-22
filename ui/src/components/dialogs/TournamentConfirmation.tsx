@@ -47,11 +47,11 @@ const TournamentConfirmation = ({
   const { gameData, getGameImage } = useUIStore();
   const [isCreating, setIsCreating] = useState(false);
 
-  const { data: setting } = useSettings({
+  const { settings } = useSettings({
     settingsIds: [Number(formData.settings)],
   });
 
-  const hasSettings = !!setting[0];
+  const hasSettings = !!settings[0];
 
   const hasBonusPrizes =
     formData.bonusPrizes && formData.bonusPrizes.length > 0;
@@ -151,7 +151,7 @@ const TournamentConfirmation = ({
                   </a>
                 </div>
                 <span className="text-muted-foreground">Settings:</span>
-                <span>{hasSettings ? setting[0].name : "Default"}</span>
+                <span>{hasSettings ? settings[0].name : "Default"}</span>
                 <span className="text-muted-foreground">Leaderboard Size:</span>
                 <span>{formData.leaderboardSize}</span>
               </div>

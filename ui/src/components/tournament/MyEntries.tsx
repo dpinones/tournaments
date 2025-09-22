@@ -1,5 +1,5 @@
 import { DOLLAR } from "@/components/Icons";
-import { useSubscribeGameTokens } from "metagame-sdk";
+import { useGameTokens } from "metagame-sdk";
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "@starknet-react/core";
 import { BigNumberish } from "starknet";
@@ -30,14 +30,14 @@ const MyEntries = ({
   // const { namespace } = useDojo();
   const [showMyEntries, setShowMyEntries] = useState(false);
 
-  const { games: ownedGames } = useSubscribeGameTokens({
+  const { games: ownedGames } = useGameTokens({
     context: {
       name: "Budokan",
       attributes: {
         "Tournament ID": tournamentId?.toString() ?? "0",
       },
     },
-    owner: address,
+    owner: address ?? "0x0",
   });
 
   const myEntriesCount = useMemo(() => {

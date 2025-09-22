@@ -90,6 +90,9 @@ export const useSdkSubscribeEntities = ({
               } as EntityResult<typeof namespace>)
           )
         );
+        _initialEntities.getItems().forEach((entity) => {
+          state.updateEntity(entity as Partial<ParsedEntity<SchemaType>>);
+        });
       } catch (err) {
         console.error("Failed to subscribe to entity query:", err);
         setError(err instanceof Error ? err : new Error(String(err)));

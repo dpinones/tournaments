@@ -193,7 +193,7 @@ export const useGetMyTournamentsCount = ({
       WHERE r.game_address IN (${gameAddresses
         .map((addr) => `"${addr}"`)
         .join(",")}) AND r.game_token_id IN (${tokenIds
-      .map((id) => `"${id}"`)
+      ?.map((id) => `"${id}"`)
       .join(",")})
     ),
     filtered_tournaments AS (
@@ -364,7 +364,6 @@ export const useGetTournaments = ({
       fromTournamentId,
     ]
   );
-  console.log(query);
   const { data, loading, error, refetch } = useSqlExecute(query);
   return { data, loading, error, refetch };
 };

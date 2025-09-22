@@ -216,14 +216,14 @@ export function EnterTournamentDialog({
     indexAddress(tournament.game_config?.address ?? "")
   );
 
-  const { data: gameTokens } = useGameTokens({
+  const { games } = useGameTokens({
     owner: address,
     gameAddresses: requiredTournamentGameAddresses,
   });
 
   const ownedGameIds = useMemo(() => {
-    return gameTokens?.map((game) => game.token_id).filter(Boolean);
-  }, [gameTokens]);
+    return games?.map((game) => game.token_id).filter(Boolean);
+  }, [games]);
 
   const { data: registrations } = useGetTournamentRegistrants({
     namespace: namespace ?? "",

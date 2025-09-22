@@ -23,12 +23,12 @@ const GameSettingsField = ({ form, field }: GameSettingsFieldProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const settingsPerPage = 5;
 
-  const { data: setting } = useSettings({
+  const { settings: setting } = useSettings({
     gameAddresses: [form.watch("game")],
     settingsIds: [field.value],
   });
 
-  const { data: allSettings } = useSettings({
+  const { settings: allSettings } = useSettings({
     gameAddresses: [form.watch("game")],
   });
 
@@ -36,7 +36,7 @@ const GameSettingsField = ({ form, field }: GameSettingsFieldProps) => {
 
   const totalPages = Math.ceil((settingsCount ?? 0) / settingsPerPage);
 
-  const { data: settings, loading: isLoadingSettings } = useSettings({
+  const { settings, loading: isLoadingSettings } = useSettings({
     gameAddresses: [form.watch("game")],
     limit: settingsPerPage,
     offset: (currentPage - 1) * settingsPerPage,

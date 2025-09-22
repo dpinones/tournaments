@@ -42,7 +42,7 @@ function App() {
   useSubscribeMetricsQuery(namespace);
   useSubscribeTournamentsQuery(namespace);
 
-  const { data: minigames, loading: minigamesLoading } = useMiniGames({});
+  const { minigames, loading: minigamesLoading } = useMiniGames({});
 
   const whitelistedGames = getGames();
 

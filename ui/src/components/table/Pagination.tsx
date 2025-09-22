@@ -34,15 +34,15 @@ const Pagination = ({
       }
     } else {
       // Adjust visible pages based on screen size
-      if (currentPage <= 2) {
-        // Near start
+      if (currentPage <= 1) {
+        // Near start (currentPage is 0-based, so 0 or 1)
         pages.push(1, 2, "...", totalPages);
-      } else if (currentPage >= totalPages - 1) {
-        // Near end
+      } else if (currentPage >= totalPages - 2) {
+        // Near end (currentPage is 0-based)
         pages.push(1, "...", totalPages - 1, totalPages);
       } else {
-        // Middle
-        pages.push(1, "...", currentPage, "...", totalPages);
+        // Middle (currentPage is 0-based, but display as 1-based)
+        pages.push(1, "...", currentPage + 1, "...", totalPages);
       }
     }
 
@@ -63,7 +63,7 @@ const Pagination = ({
           key={`page-${page}`}
           size={"xs"}
           variant={currentPage + 1 === page ? "default" : "outline"}
-          onClick={() => goToPage(page as number)}
+          onClick={() => goToPage(Number(page) - 1)}
           className="justify-center shrink-0"
         >
           {page}

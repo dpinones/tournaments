@@ -25,7 +25,7 @@ pub fn pow<T, +Sub<T>, +Mul<T>, +Div<T>, +Rem<T>, +PartialEq<T>, +Into<u8, T>, +
 
 #[inline(always)]
 pub fn ZERO() -> ContractAddress {
-    (contract_address_const::<0x0>())
+    0.try_into().unwrap()
 }
 
 #[inline(always)]

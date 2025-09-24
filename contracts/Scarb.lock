@@ -3,8 +3,8 @@ version = 1
 
 [[package]]
 name = "alexandria_bytes"
-version = "0.3.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.3.0#e3715428c990665afc495b5428ef08ab9a2089cd"
+version = "0.6.1"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.6.1#3f5e6476f350bb09e919e2725489c29442f313ca"
 dependencies = [
  "alexandria_data_structures",
  "alexandria_math",
@@ -12,13 +12,13 @@ dependencies = [
 
 [[package]]
 name = "alexandria_data_structures"
-version = "0.3.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.3.0#e3715428c990665afc495b5428ef08ab9a2089cd"
+version = "0.6.1"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.6.1#3f5e6476f350bb09e919e2725489c29442f313ca"
 
 [[package]]
 name = "alexandria_encoding"
-version = "0.3.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.3.0#e3715428c990665afc495b5428ef08ab9a2089cd"
+version = "0.6.1"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.6.1#3f5e6476f350bb09e919e2725489c29442f313ca"
 dependencies = [
  "alexandria_bytes",
  "alexandria_data_structures",
@@ -28,13 +28,13 @@ dependencies = [
 
 [[package]]
 name = "alexandria_math"
-version = "0.3.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.3.0#e3715428c990665afc495b5428ef08ab9a2089cd"
+version = "0.6.1"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.6.1#3f5e6476f350bb09e919e2725489c29442f313ca"
 
 [[package]]
 name = "alexandria_numeric"
-version = "0.3.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.3.0#e3715428c990665afc495b5428ef08ab9a2089cd"
+version = "0.6.1"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.6.1#3f5e6476f350bb09e919e2725489c29442f313ca"
 dependencies = [
  "alexandria_math",
  "alexandria_searching",
@@ -42,8 +42,8 @@ dependencies = [
 
 [[package]]
 name = "alexandria_searching"
-version = "0.3.0"
-source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.3.0#e3715428c990665afc495b5428ef08ab9a2089cd"
+version = "0.6.1"
+source = "git+https://github.com/keep-starknet-strange/alexandria.git?tag=v0.6.1#3f5e6476f350bb09e919e2725489c29442f313ca"
 dependencies = [
  "alexandria_data_structures",
 ]
@@ -53,6 +53,7 @@ name = "budokan"
 version = "0.0.1"
 dependencies = [
  "dojo",
+ "dojo_cairo_macros",
  "dojo_cairo_test",
  "game_components_metagame",
  "game_components_minigame",
@@ -65,29 +66,32 @@ dependencies = [
 
 [[package]]
 name = "dojo"
-version = "1.6.2"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.6.2#d6e847c51ecd0121a43c2a17b96dbca936604764"
+version = "1.7.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:43866af1b23659c992fcf786f7f69429689eb684d42ffb77a351490e763bf915"
 dependencies = [
- "dojo_plugin",
+ "dojo_cairo_macros",
 ]
 
 [[package]]
+name = "dojo_cairo_macros"
+version = "1.7.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:53d38987d9a0acc9493282711cd504ad4920fd4cd31f230deb5ff4ea11183958"
+
+[[package]]
 name = "dojo_cairo_test"
-version = "1.6.2"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.6.2#d6e847c51ecd0121a43c2a17b96dbca936604764"
+version = "1.7.0"
+source = "registry+https://scarbs.xyz/"
+checksum = "sha256:3e95042deeef76bd43c8c05b15f8757060663269aed7e31f9c6c4a3934a5cba4"
 dependencies = [
  "dojo",
 ]
 
 [[package]]
-name = "dojo_plugin"
-version = "2.10.1"
-source = "git+https://github.com/dojoengine/dojo?tag=v1.6.2#d6e847c51ecd0121a43c2a17b96dbca936604764"
-
-[[package]]
 name = "game_components_metagame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.9#937ae141c61b8bfdfce417507683d070f92e6de6"
+source = "git+https://github.com/dpinones/game-components?branch=bump-cairo-2.12.2#64ce15b9e6ca5599299a40042c441b03dd562fcb"
 dependencies = [
  "game_components_minigame",
  "game_components_token",
@@ -99,7 +103,7 @@ dependencies = [
 [[package]]
 name = "game_components_minigame"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.9#937ae141c61b8bfdfce417507683d070f92e6de6"
+source = "git+https://github.com/dpinones/game-components?branch=bump-cairo-2.12.2#64ce15b9e6ca5599299a40042c441b03dd562fcb"
 dependencies = [
  "game_components_metagame",
  "game_components_token",
@@ -111,7 +115,7 @@ dependencies = [
 [[package]]
 name = "game_components_test_starknet"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.9#937ae141c61b8bfdfce417507683d070f92e6de6"
+source = "git+https://github.com/dpinones/game-components?branch=bump-cairo-2.12.2#64ce15b9e6ca5599299a40042c441b03dd562fcb"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -124,7 +128,7 @@ dependencies = [
 [[package]]
 name = "game_components_token"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.9#937ae141c61b8bfdfce417507683d070f92e6de6"
+source = "git+https://github.com/dpinones/game-components?branch=bump-cairo-2.12.2#64ce15b9e6ca5599299a40042c441b03dd562fcb"
 dependencies = [
  "game_components_metagame",
  "game_components_minigame",
@@ -137,7 +141,7 @@ dependencies = [
 [[package]]
 name = "game_components_utils"
 version = "1.5.1"
-source = "git+https://github.com/Provable-Games/game-components?tag=0.0.9#937ae141c61b8bfdfce417507683d070f92e6de6"
+source = "git+https://github.com/dpinones/game-components?branch=bump-cairo-2.12.2#64ce15b9e6ca5599299a40042c441b03dd562fcb"
 dependencies = [
  "alexandria_encoding",
  "game_components_metagame",

@@ -1,5 +1,5 @@
 [package]
-cairo-version = "=2.10.1"
+cairo-version = "2.12.2"
 name = "budokan"
 version = "0.0.1"
 edition = "2024_07"
@@ -20,20 +20,18 @@ build-external-contracts = [
 [dependencies]
 openzeppelin_introspection = "1.0.0"
 openzeppelin_token = "1.0.0"
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.6.2" }
-game_components_metagame = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.9" }
-game_components_minigame = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.9" }
-game_components_utils = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.9" }
-game_components_test_starknet = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.9" }
-game_components_token = { git = "https://github.com/Provable-Games/game-components", tag = "0.0.9" }
-starknet = "2.10.1"
+dojo = "1.7.0"
+dojo_cairo_macros = "1.7.0"
+starknet = "2.12.2"
+game_components_metagame = { git = "https://github.com/dpinones/game-components", branch = "bump-cairo-2.12.2" }
+game_components_minigame = { git = "https://github.com/dpinones/game-components", branch = "bump-cairo-2.12.2" }
+game_components_utils = { git = "https://github.com/dpinones/game-components", branch = "bump-cairo-2.12.2" }
+game_components_test_starknet = { git = "https://github.com/dpinones/game-components", branch = "bump-cairo-2.12.2" }
+game_components_token = { git = "https://github.com/dpinones/game-components", branch = "bump-cairo-2.12.2" }
 
 [dev-dependencies]
-dojo_cairo_test = { git = "https://github.com/dojoengine/dojo.git", tag = "v1.6.2" }
-cairo_test = "2.10.1"
-
-[features]
-default = []
+cairo_test = "=2.12.2"
+dojo_cairo_test = "1.7.0"
 
 [profile.dev]
 [profile.slot]

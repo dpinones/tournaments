@@ -14,8 +14,8 @@ build-external-contracts = ["dojo::world::world_contract::world"]
 dojo = "1.7.0"
 dojo_cairo_macros = "1.7.0"
 starknet = "2.12.2"
-openzeppelin_introspection = { git = "https://github.com/openzeppelin/cairo-contracts", tag = "v1.0.0"}
-openzeppelin_token = { git = "https://github.com/openzeppelin/cairo-contracts", tag = "v1.0.0"}
+openzeppelin_introspection = "1.0.0"
+openzeppelin_token = "1.0.0"
 
 [dev-dependencies]
 cairo_test = "=2.12.2"

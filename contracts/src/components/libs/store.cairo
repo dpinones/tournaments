@@ -1,13 +1,13 @@
+use dojo::model::ModelStorage;
+use dojo::world::WorldStorage;
 use starknet::ContractAddress;
-use dojo::world::{WorldStorage};
-use dojo::model::{ModelStorage};
-use tournaments::components::models::tournament::{
-    Tournament, EntryCount, Prize, Leaderboard, Token, Registration, TournamentConfig,
-    TournamentTokenMetrics, PlatformMetrics, PrizeMetrics, PrizeClaim, PrizeType, Metadata,
-    GameConfig, EntryFee, EntryRequirement, QualificationEntries, QualificationProof,
-};
+use tournaments::components::constants::VERSION;
 use tournaments::components::models::schedule::Schedule;
-use tournaments::components::constants::{VERSION};
+use tournaments::components::models::tournament::{
+    EntryCount, EntryFee, EntryRequirement, GameConfig, Leaderboard, Metadata, PlatformMetrics,
+    Prize, PrizeClaim, PrizeMetrics, PrizeType, QualificationEntries, QualificationProof,
+    Registration, Token, Tournament, TournamentConfig, TournamentTokenMetrics,
+};
 
 #[derive(Copy, Drop)]
 pub struct Store {

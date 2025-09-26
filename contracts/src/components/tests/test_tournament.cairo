@@ -1,58 +1,50 @@
 // SPDX-License-Identifier: UNLICENSED
 
 use core::option::Option;
-use starknet::{ContractAddress, get_block_timestamp, testing};
-use dojo::world::{WorldStorage};
+use dojo::world::WorldStorage;
 use dojo_cairo_test::{
-    spawn_test_world, NamespaceDef, TestResource, ContractDefTrait, ContractDef,
-    WorldStorageTestTrait,
+    ContractDef, ContractDefTrait, NamespaceDef, TestResource, WorldStorageTestTrait,
+    spawn_test_world,
 };
-
+use openzeppelin_token::erc721::ERC721Component::{Approval, Transfer};
+use openzeppelin_token::erc721::interface;
+use starknet::{ContractAddress, get_block_timestamp, testing};
 use tournaments::components::constants::{
-    MIN_REGISTRATION_PERIOD, MIN_SUBMISSION_PERIOD, MAX_SUBMISSION_PERIOD, MIN_TOURNAMENT_LENGTH,
-    DEFAULT_NS,
+    DEFAULT_NS, MAX_SUBMISSION_PERIOD, MIN_REGISTRATION_PERIOD, MIN_SUBMISSION_PERIOD,
+    MIN_TOURNAMENT_LENGTH,
 };
-
-use tournaments::components::tests::interfaces::WorldTrait;
-
-use tournaments::components::models::{
-    game::{m_GameMetadata, m_GameCounter, m_SettingsDetails, m_TokenMetadata, m_Score},
-    tournament::{
-        m_Tournament, m_Registration, m_EntryCount, m_Leaderboard, m_Prize, m_Token,
-        m_TournamentConfig, m_PrizeMetrics, m_PlatformMetrics, m_TournamentTokenMetrics,
-        m_PrizeClaim, m_QualificationEntries, ERC20Data, ERC721Data, EntryFee, TokenType,
-        EntryRequirement, EntryRequirementType, TournamentType, Prize, PrizeType, Role,
-        QualificationProof, TournamentQualification, NFTQualification,
-    },
+use tournaments::components::models::game::{
+    m_GameCounter, m_GameMetadata, m_Score, m_SettingsDetails, m_TokenMetadata,
 };
-
-use tournaments::components::models::schedule::{Schedule, Period, Phase};
-
-use tournaments::tests::{
-    utils,
-    constants::{
-        OWNER, TOURNAMENT_NAME, TOURNAMENT_DESCRIPTION, STARTING_BALANCE,
-        TEST_REGISTRATION_START_TIME, TEST_REGISTRATION_END_TIME, TEST_START_TIME, TEST_END_TIME,
-    },
+use tournaments::components::models::schedule::{Period, Phase, Schedule};
+use tournaments::components::models::tournament::{
+    ERC20Data, ERC721Data, EntryFee, EntryRequirement, EntryRequirementType, NFTQualification,
+    Prize, PrizeType, QualificationProof, Role, TokenType, TournamentQualification, TournamentType,
+    m_EntryCount, m_Leaderboard, m_PlatformMetrics, m_Prize, m_PrizeClaim, m_PrizeMetrics,
+    m_QualificationEntries, m_Registration, m_Token, m_Tournament, m_TournamentConfig,
+    m_TournamentTokenMetrics,
 };
 use tournaments::components::tests::helpers::{
-    create_basic_tournament, create_settings_details, test_metadata, test_game_config,
-    test_schedule, custom_schedule, test_game_period, registration_period_too_short,
-    registration_period_too_long, registration_open_beyond_tournament_end, test_season_schedule,
-    tournament_too_long,
-};
-use tournaments::components::tests::mocks::{
-    erc20_mock::erc20_mock, erc721_mock::erc721_mock, tournament_mock::tournament_mock,
-    game_mock::game_mock,
+    create_basic_tournament, create_settings_details, custom_schedule,
+    registration_open_beyond_tournament_end, registration_period_too_long,
+    registration_period_too_short, test_game_config, test_game_period, test_metadata, test_schedule,
+    test_season_schedule, tournament_too_long,
 };
 use tournaments::components::tests::interfaces::{
-    IGameTokenMockDispatcher, IGameTokenMockDispatcherTrait, ITournamentMockDispatcher,
-    ITournamentMockDispatcherTrait, IERC20MockDispatcher, IERC20MockDispatcherTrait,
-    IERC721MockDispatcher, IERC721MockDispatcherTrait, IGAMETOKEN_ID, IGAME_METADATA_ID,
+    IERC20MockDispatcher, IERC20MockDispatcherTrait, IERC721MockDispatcher,
+    IERC721MockDispatcherTrait, IGAMETOKEN_ID, IGAME_METADATA_ID, IGameTokenMockDispatcher,
+    IGameTokenMockDispatcherTrait, ITournamentMockDispatcher, ITournamentMockDispatcherTrait,
+    WorldTrait,
 };
-
-use openzeppelin_token::erc721::interface;
-use openzeppelin_token::erc721::{ERC721Component::{Transfer, Approval}};
+use tournaments::components::tests::mocks::erc20_mock::erc20_mock;
+use tournaments::components::tests::mocks::erc721_mock::erc721_mock;
+use tournaments::components::tests::mocks::game_mock::game_mock;
+use tournaments::components::tests::mocks::tournament_mock::tournament_mock;
+use tournaments::tests::constants::{
+    OWNER, STARTING_BALANCE, TEST_END_TIME, TEST_REGISTRATION_END_TIME,
+    TEST_REGISTRATION_START_TIME, TEST_START_TIME, TOURNAMENT_DESCRIPTION, TOURNAMENT_NAME,
+};
+use tournaments::tests::utils;
 
 #[derive(Drop)]
 pub struct TestContracts {

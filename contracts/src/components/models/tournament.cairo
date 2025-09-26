@@ -18,20 +18,20 @@ pub struct Tournament {
     pub entry_requirement: Option<EntryRequirement>,
 }
 
-#[derive(Drop, Serde, Introspect)]
+#[derive(Drop, Serde, DojoStore, Introspect)]
 pub struct Metadata {
     pub name: felt252,
     pub description: ByteArray,
 }
 
-#[derive(Copy, Drop, Serde, Introspect)]
+#[derive(Copy, Drop, Serde, DojoStore, Introspect)]
 pub struct GameConfig {
     pub address: ContractAddress,
     pub settings_id: u32,
     pub prize_spots: u8,
 }
 
-#[derive(Copy, Drop, Serde, PartialEq, Introspect)]
+#[derive(Copy, Drop, Serde, PartialEq, DojoStore, Introspect)]
 pub struct EntryFee {
     pub token_address: ContractAddress,
     pub amount: u128,
@@ -40,17 +40,23 @@ pub struct EntryFee {
     pub game_creator_share: Option<u8>,
 }
 
-#[derive(Copy, Drop, Serde, PartialEq, Introspect)]
+#[derive(Copy, Drop, Serde, PartialEq, DojoStore, Introspect)]
 pub struct EntryRequirement {
     pub entry_limit: u8,
     pub entry_requirement_type: EntryRequirementType,
 }
 
-#[derive(Copy, Drop, Serde, PartialEq, Introspect)]
+#[derive(Copy, Drop, Serde, PartialEq, DojoStore, Introspect)]
 pub enum EntryRequirementType {
     token: ContractAddress,
     tournament: TournamentType,
     allowlist: Span<ContractAddress>,
+}
+
+impl EntryRequirementTypeDefault of Default<EntryRequirementType> {
+    fn default() -> EntryRequirementType {
+        EntryRequirementType::token(0.try_into().unwrap())
+    }
 }
 
 #[dojo::model]
@@ -63,24 +69,37 @@ pub struct QualificationEntries {
     pub entry_count: u8,
 }
 
-#[derive(Copy, Drop, Serde, PartialEq, Introspect)]
+#[derive(Copy, Drop, Serde, PartialEq, DojoStore, Introspect)]
 pub enum TournamentType {
     winners: Span<u64>,
     participants: Span<u64>,
 }
 
-#[derive(Copy, Drop, Serde, Introspect)]
+impl TournamentTypeDefault of Default<TournamentType> {
+    fn default() -> TournamentType {
+        TournamentType::winners([].span())
+    }
+}
+
+#[derive(Copy, Drop, Serde, DojoStore, Introspect)]
 pub struct ERC20Data {
     pub amount: u128,
 }
 
-#[derive(Copy, Drop, Serde, Introspect)]
+impl ERC20DataDefault of Default<ERC20Data> {
+    fn default() -> ERC20Data {
+        ERC20Data { amount: 0 }
+    }
+}
+
+#[derive(Copy, Drop, Serde, DojoStore, Introspect)]
 pub struct ERC721Data {
     pub id: u128,
 }
 
-#[derive(Copy, Drop, Serde, Introspect)]
+#[derive(Copy, Drop, Serde, DojoStore, Default, Introspect)]
 pub enum TokenType {
+    #[default]
     erc20: ERC20Data,
     erc721: ERC721Data,
 }

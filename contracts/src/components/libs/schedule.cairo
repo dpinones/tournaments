@@ -1,8 +1,8 @@
-use tournaments::components::models::schedule::{Schedule, Period, Phase};
 use tournaments::components::constants::{
-    MIN_REGISTRATION_PERIOD, MAX_REGISTRATION_PERIOD, MIN_TOURNAMENT_LENGTH, MAX_TOURNAMENT_LENGTH,
-    MIN_SUBMISSION_PERIOD, MAX_SUBMISSION_PERIOD,
+    MAX_REGISTRATION_PERIOD, MAX_SUBMISSION_PERIOD, MAX_TOURNAMENT_LENGTH, MIN_REGISTRATION_PERIOD,
+    MIN_SUBMISSION_PERIOD, MIN_TOURNAMENT_LENGTH,
 };
+use tournaments::components::models::schedule::{Period, Phase, Schedule};
 
 #[generate_trait]
 pub impl ScheduleImpl of ScheduleTrait {
@@ -228,12 +228,12 @@ pub impl ScheduleAssertionsImpl of ScheduleAssertionsTrait {
 
 #[cfg(test)]
 mod tests {
-    use super::{ScheduleTrait, ScheduleAssertionsTrait, Schedule, Period, Phase};
-    use tournaments::components::constants::{
-        MIN_REGISTRATION_PERIOD, MAX_REGISTRATION_PERIOD, MIN_TOURNAMENT_LENGTH,
-        MAX_TOURNAMENT_LENGTH, MIN_SUBMISSION_PERIOD, MAX_SUBMISSION_PERIOD,
-    };
     use core::num::traits::Bounded;
+    use tournaments::components::constants::{
+        MAX_REGISTRATION_PERIOD, MAX_SUBMISSION_PERIOD, MAX_TOURNAMENT_LENGTH,
+        MIN_REGISTRATION_PERIOD, MIN_SUBMISSION_PERIOD, MIN_TOURNAMENT_LENGTH,
+    };
+    use super::{Period, Phase, Schedule, ScheduleAssertionsTrait, ScheduleTrait};
 
     #[test]
     fn current_phase() {

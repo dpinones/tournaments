@@ -1,23 +1,17 @@
 use starknet::ContractAddress;
-
 use tournaments::components::constants::{
-    MIN_REGISTRATION_PERIOD, MAX_REGISTRATION_PERIOD, MIN_SUBMISSION_PERIOD, MAX_TOURNAMENT_LENGTH,
+    MAX_REGISTRATION_PERIOD, MAX_TOURNAMENT_LENGTH, MIN_REGISTRATION_PERIOD, MIN_SUBMISSION_PERIOD,
 };
-use tournaments::tests::{
-    constants::{
-        TOURNAMENT_NAME, TOURNAMENT_DESCRIPTION, TEST_REGISTRATION_START_TIME,
-        TEST_REGISTRATION_END_TIME, TEST_START_TIME, TEST_END_TIME, SETTINGS_NAME,
-        SETTINGS_DESCRIPTION, OWNER,
-    },
-};
+use tournaments::components::models::schedule::{Period, Schedule};
+use tournaments::components::models::tournament::{GameConfig, Metadata, Tournament};
 use tournaments::components::tests::interfaces::{
-    ITournamentMockDispatcher, ITournamentMockDispatcherTrait, IGameTokenMockDispatcher,
-    IGameTokenMockDispatcherTrait,
+    IGameTokenMockDispatcher, IGameTokenMockDispatcherTrait, ITournamentMockDispatcher,
+    ITournamentMockDispatcherTrait,
 };
-
-use tournaments::components::models::tournament::{Tournament, Metadata, GameConfig};
-
-use tournaments::components::models::schedule::{Schedule, Period};
+use tournaments::tests::constants::{
+    OWNER, SETTINGS_DESCRIPTION, SETTINGS_NAME, TEST_END_TIME, TEST_REGISTRATION_END_TIME,
+    TEST_REGISTRATION_START_TIME, TEST_START_TIME, TOURNAMENT_DESCRIPTION, TOURNAMENT_NAME,
+};
 
 //
 // Test Helpers

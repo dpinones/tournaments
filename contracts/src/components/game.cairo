@@ -3,24 +3,23 @@
 ///
 #[starknet::component]
 pub mod game_component {
-    use tournaments::components::interfaces::{IGameToken, IGameDetails, ISettings};
-    use starknet::{ContractAddress, get_contract_address};
+    use dojo::contract::components::world_provider::IWorldProvider;
+    use openzeppelin_introspection::src5::SRC5Component;
+    use openzeppelin_introspection::src5::SRC5Component::{
+        InternalTrait as SRC5InternalTrait, SRC5Impl,
+    };
+    use openzeppelin_token::erc721::ERC721Component;
+    use openzeppelin_token::erc721::ERC721Component::InternalImpl as ERC721InternalImpl;
+    use openzeppelin_token::erc721::interface::{IERC721_ID, IERC721_METADATA_ID};
     use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
-    use dojo::contract::components::world_provider::{IWorldProvider};
-
-    use tournaments::components::models::game::{GameMetadata, TokenMetadata, SettingsDetails};
-    use tournaments::components::models::lifecycle::Lifecycle;
+    use starknet::{ContractAddress, get_contract_address};
     use tournaments::components::interfaces::{
-        WorldTrait, WorldImpl, IGAMETOKEN_ID, IGAME_METADATA_ID,
+        IGAMETOKEN_ID, IGAME_METADATA_ID, IGameDetails, IGameToken, ISettings, WorldImpl,
+        WorldTrait,
     };
     use tournaments::components::libs::game_store::{Store, StoreTrait};
-    use openzeppelin_introspection::src5::SRC5Component;
-    use openzeppelin_introspection::src5::SRC5Component::InternalTrait as SRC5InternalTrait;
-    use openzeppelin_introspection::src5::SRC5Component::SRC5Impl;
-    use openzeppelin_token::erc721::{
-        ERC721Component, ERC721Component::{InternalImpl as ERC721InternalImpl},
-        interface::{IERC721_ID, IERC721_METADATA_ID},
-    };
+    use tournaments::components::models::game::{GameMetadata, SettingsDetails, TokenMetadata};
+    use tournaments::components::models::lifecycle::Lifecycle;
 
     #[storage]
     pub struct Storage {

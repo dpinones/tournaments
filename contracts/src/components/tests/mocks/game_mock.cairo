@@ -18,16 +18,13 @@ pub trait IGameTokenMockInit<TContractState> {
 
 #[dojo::contract]
 mod game_mock {
-    use tournaments::components::interfaces::{ISettings, IGameDetails};
-    use tournaments::components::game::game_component;
     use openzeppelin_introspection::src5::SRC5Component;
     use openzeppelin_token::erc721::{ERC721Component, ERC721HooksEmptyImpl};
-
-    use tournaments::components::interfaces::{WorldImpl};
+    use starknet::ContractAddress;
+    use tournaments::components::game::game_component;
+    use tournaments::components::interfaces::{IGameDetails, ISettings, WorldImpl};
     use tournaments::components::libs::game_store::{Store, StoreTrait};
-    use tournaments::components::models::game::{SettingsDetails, Score};
-
-    use starknet::{ContractAddress, contract_address_const};
+    use tournaments::components::models::game::{Score, SettingsDetails};
 
     component!(path: game_component, storage: game, event: GameEvent);
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
@@ -92,7 +89,7 @@ mod game_mock {
         ("https://game.io/image.png")
     }
     fn GAME_CREATOR() -> ContractAddress {
-        contract_address_const::<'GAME CREATOR'>()
+        'GAME CREATOR'.try_into().unwrap()
     }
     //*******************************
 

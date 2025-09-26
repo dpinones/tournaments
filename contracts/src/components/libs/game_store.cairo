@@ -1,12 +1,10 @@
+use dojo::model::ModelStorage;
+use dojo::world::WorldStorage;
 use starknet::ContractAddress;
-use dojo::world::{WorldStorage};
-use dojo::model::{ModelStorage};
-
+use tournaments::components::game::game_component::VERSION;
 use tournaments::components::models::game::{
-    GameMetadata, SettingsDetails, TokenMetadata, GameCounter, Score,
+    GameCounter, GameMetadata, Score, SettingsDetails, TokenMetadata,
 };
-
-use tournaments::components::game::game_component::{VERSION};
 
 #[derive(Copy, Drop)]
 pub struct Store {

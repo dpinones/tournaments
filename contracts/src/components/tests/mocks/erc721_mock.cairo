@@ -1,5 +1,5 @@
-use starknet::{ContractAddress};
 use dojo::world::IWorldDispatcher;
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IERC721Mock<TState> {
@@ -57,13 +57,12 @@ pub trait IERC721MockPublic<TState> {
 
 #[dojo::contract]
 pub mod erc721_mock {
-    use starknet::ContractAddress;
-
     //-----------------------------------
     // OpenZeppelin start
     //
     use openzeppelin_introspection::src5::SRC5Component;
     use openzeppelin_token::erc721::{ERC721Component, ERC721HooksEmptyImpl};
+    use starknet::ContractAddress;
     component!(path: SRC5Component, storage: src5, event: SRC5Event);
     component!(path: ERC721Component, storage: erc721, event: ERC721Event);
     #[abi(embed_v0)]

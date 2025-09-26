@@ -1,5 +1,6 @@
 use core::result::ResultTrait;
-use starknet::{ContractAddress, syscalls::deploy_syscall, testing};
+use starknet::syscalls::deploy_syscall;
+use starknet::{ContractAddress, testing};
 
 pub fn impersonate(address: ContractAddress) {
     testing::set_contract_address(address);

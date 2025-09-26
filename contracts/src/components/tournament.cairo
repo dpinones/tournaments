@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 
 use starknet::ContractAddress;
+use tournaments::components::models::schedule::{Phase, Schedule};
 use tournaments::components::models::tournament::{
-    Tournament as TournamentModel, TokenType, Registration, Prize, PrizeType, Metadata, GameConfig,
-    EntryFee, EntryRequirement, QualificationProof,
+    EntryFee, EntryRequirement, GameConfig, Metadata, Prize, PrizeType, QualificationProof,
+    Registration, TokenType, Tournament as TournamentModel,
 };
-use tournaments::components::models::schedule::{Schedule, Phase};
 
 ///
 /// Interface
@@ -60,35 +60,8 @@ trait ITournament<TState> {
 
 #[starknet::component]
 pub mod tournament_component {
-    use super::ITournament;
-
     use core::num::traits::Zero;
-
-    use tournaments::components::constants::{
-        TWO_POW_128, DEFAULT_NS, VERSION, SEPOLIA_CHAIN_ID, GAME_CREATOR_TOKEN_ID,
-    };
-    use tournaments::components::interfaces::{
-        IGameTokenDispatcher, IGameTokenDispatcherTrait, IGameDetailsDispatcher,
-        IGameDetailsDispatcherTrait, IGAMETOKEN_ID, IGAME_METADATA_ID,
-    };
-    use tournaments::components::models::tournament::{
-        Tournament as TournamentModel, Registration, Leaderboard, Prize, Token, TournamentConfig,
-        TokenType, TournamentType, ERC20Data, ERC721Data, PrizeType, Role, PrizeClaim, Metadata,
-        GameConfig, EntryFee, EntryRequirement, QualificationProof, TournamentQualification,
-        EntryRequirementType,
-    };
-    use tournaments::components::models::schedule::{Schedule, Phase};
-    use tournaments::components::interfaces::{WorldTrait, WorldImpl};
-    use tournaments::components::libs::store::{Store, StoreTrait};
-    use tournaments::components::libs::schedule::{
-        ScheduleTrait, ScheduleImpl, ScheduleAssertionsTrait, ScheduleAssertionsImpl,
-    };
-    use tournaments::components::interfaces::{ISettingsDispatcher, ISettingsDispatcherTrait};
-
-    use dojo::contract::components::world_provider::{IWorldProvider};
-
-    use starknet::{ContractAddress, get_block_timestamp, get_contract_address, get_caller_address};
-
+    use dojo::contract::components::world_provider::IWorldProvider;
     use openzeppelin_introspection::interface::{ISRC5Dispatcher, ISRC5DispatcherTrait};
     use openzeppelin_token::erc20::interface::{
         IERC20Dispatcher, IERC20DispatcherTrait, IERC20MetadataDispatcher,
@@ -98,6 +71,27 @@ pub mod tournament_component {
         IERC721Dispatcher, IERC721DispatcherTrait, IERC721MetadataDispatcher,
         IERC721MetadataDispatcherTrait, IERC721_ID,
     };
+    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address};
+    use tournaments::components::constants::{
+        DEFAULT_NS, GAME_CREATOR_TOKEN_ID, SEPOLIA_CHAIN_ID, TWO_POW_128, VERSION,
+    };
+    use tournaments::components::interfaces::{
+        IGAMETOKEN_ID, IGAME_METADATA_ID, IGameDetailsDispatcher, IGameDetailsDispatcherTrait,
+        IGameTokenDispatcher, IGameTokenDispatcherTrait, ISettingsDispatcher,
+        ISettingsDispatcherTrait, WorldImpl, WorldTrait,
+    };
+    use tournaments::components::libs::schedule::{
+        ScheduleAssertionsImpl, ScheduleAssertionsTrait, ScheduleImpl, ScheduleTrait,
+    };
+    use tournaments::components::libs::store::{Store, StoreTrait};
+    use tournaments::components::models::schedule::{Phase, Schedule};
+    use tournaments::components::models::tournament::{
+        ERC20Data, ERC721Data, EntryFee, EntryRequirement, EntryRequirementType, GameConfig,
+        Leaderboard, Metadata, Prize, PrizeClaim, PrizeType, QualificationProof, Registration, Role,
+        Token, TokenType, Tournament as TournamentModel, TournamentConfig, TournamentQualification,
+        TournamentType,
+    };
+    use super::ITournament;
 
     // uses dojo world storage
     #[storage]
@@ -675,7 +669,7 @@ pub mod tournament_component {
                 let distribution = *entry_fee.distribution.at(distribution_index);
                 distribution_sum += distribution;
                 distribution_index += 1;
-            };
+            }
 
             if let Option::Some(host_share) = entry_fee.tournament_creator_share {
                 distribution_sum += host_share;
@@ -1014,7 +1008,7 @@ pub mod tournament_component {
                 }
 
                 loop_index += 1;
-            };
+            }
 
             is_qualified
         }
@@ -1501,7 +1495,7 @@ pub mod tournament_component {
                 }
                 new_leaderboard.append(*current_leaderboard.at(i));
                 i += 1;
-            };
+            }
 
             // Insert new score
             new_leaderboard.append(token_id);
@@ -1513,7 +1507,7 @@ pub mod tournament_component {
                 }
                 new_leaderboard.append(*current_leaderboard.at(i));
                 i += 1;
-            };
+            }
 
             current_leaderboard = new_leaderboard;
         }

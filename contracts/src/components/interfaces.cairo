@@ -1,9 +1,7 @@
+use dojo::world::{IWorldDispatcher, WorldStorage, WorldStorageTrait};
 use starknet::ContractAddress;
-use dojo::world::{WorldStorage, WorldStorageTrait, IWorldDispatcher};
-
-use tournaments::components::models::game::{TokenMetadata, GameMetadata};
-
 use tournaments::components::libs::utils::ZERO;
+use tournaments::components::models::game::{GameMetadata, TokenMetadata};
 
 pub const IGAMETOKEN_ID: felt252 =
     0x027fd8d2e685b5a61e4516152831e8730c27b25c9f831ec27c1e48a46e55086a;

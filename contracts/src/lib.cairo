@@ -1,13 +1,13 @@
 pub mod components {
     pub mod constants;
-    pub mod interfaces;
     pub mod game;
+    pub mod interfaces;
     pub mod libs {
-        pub mod store;
         pub mod game_store;
-        pub mod utils;
         pub mod lifecycle;
         pub mod schedule;
+        pub mod store;
+        pub mod utils;
     }
     pub mod models {
         pub mod game;
@@ -28,9 +28,9 @@ pub mod components {
         }
         #[cfg(test)]
         mod helpers;
+        pub mod interfaces;
         #[cfg(test)]
         mod test_tournament;
-        pub mod interfaces;
         // #[cfg(test)]
     // mod test_tournament_stress_tests;
     }

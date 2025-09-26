@@ -1,4 +1,4 @@
-use starknet::{ContractAddress};
+use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IERC20MockPublic<TState> {
@@ -8,13 +8,11 @@ pub trait IERC20MockPublic<TState> {
 
 #[dojo::contract]
 pub mod erc20_mock {
-    use starknet::ContractAddress;
-
     //-----------------------------------
     // OpenZeppelin start
     //
-    use openzeppelin_token::erc20::ERC20Component;
-    use openzeppelin_token::erc20::ERC20HooksEmptyImpl;
+    use openzeppelin_token::erc20::{ERC20Component, ERC20HooksEmptyImpl};
+    use starknet::ContractAddress;
     component!(path: ERC20Component, storage: erc20, event: ERC20Event);
     #[abi(embed_v0)]
     impl ERC20MixinImpl = ERC20Component::ERC20MixinImpl<ContractState>;

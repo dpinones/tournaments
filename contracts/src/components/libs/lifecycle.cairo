@@ -66,9 +66,9 @@ pub impl LifecycleAssertionsImpl of LifecycleAssertionsTrait {
 
 #[cfg(test)]
 mod tests {
-    use super::{LifecycleTrait, LifecycleAssertionsTrait};
-    use tournaments::components::models::lifecycle::Lifecycle;
     use core::num::traits::Bounded;
+    use tournaments::components::models::lifecycle::Lifecycle;
+    use super::{LifecycleAssertionsTrait, LifecycleTrait};
 
     #[test]
     fn can_start() {

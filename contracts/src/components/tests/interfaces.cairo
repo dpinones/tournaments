@@ -1,14 +1,12 @@
-use tournaments::components::models::tournament::{
-    Tournament as TournamentModel, TokenType, Registration, Prize, PrizeType, Metadata, GameConfig,
-    EntryFee, EntryRequirement, QualificationProof,
-};
-use tournaments::components::models::schedule::{Schedule, Phase};
-use tournaments::components::models::game::{SettingsDetails, TokenMetadata};
-
+use dojo::world::{IWorldDispatcher, WorldStorage, WorldStorageTrait};
 use starknet::ContractAddress;
-use dojo::world::{WorldStorage, WorldStorageTrait, IWorldDispatcher};
-
 use tournaments::components::libs::utils::ZERO;
+use tournaments::components::models::game::{SettingsDetails, TokenMetadata};
+use tournaments::components::models::schedule::{Phase, Schedule};
+use tournaments::components::models::tournament::{
+    EntryFee, EntryRequirement, GameConfig, Metadata, Prize, PrizeType, QualificationProof,
+    Registration, TokenType, Tournament as TournamentModel,
+};
 
 #[derive(Drop, Copy, Serde, Introspect)]
 pub struct Token {

@@ -1,22 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 
+use dojo::model::ModelStorageTest;
 use starknet::testing;
-use tournaments::components::constants::{MIN_SUBMISSION_PERIOD};
-use tournaments::components::models::tournament::{TournamentGame, TokenType, ERC20Data, Prize};
-
+use tournaments::components::constants::MIN_SUBMISSION_PERIOD;
+use tournaments::components::models::tournament::{ERC20Data, Prize, TokenType, TournamentGame};
 use tournaments::components::tests::interfaces::{
-    IGameTokenMockDispatcherTrait, ITournamentMockDispatcherTrait, IERC20MockDispatcherTrait,
+    IERC20MockDispatcherTrait, IGameTokenMockDispatcherTrait, ITournamentMockDispatcherTrait,
 };
-use tournaments::components::tests::test_tournament::{setup, TestContracts};
-use tournaments::tests::{
-    utils,
-    constants::{
-        OWNER, TOURNAMENT_NAME, TOURNAMENT_DESCRIPTION, TEST_START_TIME, TEST_END_TIME,
-        TEST_REGISTRATION_START_TIME, TEST_REGISTRATION_END_TIME,
-    },
+use tournaments::components::tests::test_tournament::{TestContracts, setup};
+use tournaments::tests::constants::{
+    OWNER, TEST_END_TIME, TEST_REGISTRATION_END_TIME, TEST_REGISTRATION_START_TIME, TEST_START_TIME,
+    TOURNAMENT_DESCRIPTION, TOURNAMENT_NAME,
 };
-
-use dojo::model::{ModelStorageTest};
+use tournaments::tests::utils;
 
 #[test]
 fn test_submit_multiple_scores_stress_test() {
@@ -53,7 +49,7 @@ fn test_submit_multiple_scores_stress_test() {
         }
         contracts.game.end_game((i + 1).try_into().unwrap(), 1);
         i += 1;
-    };
+    }
 
     let mut i: u64 = 0;
     loop {
@@ -72,7 +68,7 @@ fn test_submit_multiple_scores_stress_test() {
                 },
             );
         i += 1;
-    };
+    }
 
     // Submit scores in order of position
     let mut score_ids: Array<felt252> = array![];
@@ -83,7 +79,7 @@ fn test_submit_multiple_scores_stress_test() {
         }
         score_ids.append((150 - i).try_into().unwrap());
         i += 1;
-    };
+    }
     contracts.tournament.submit_scores(tournament_id, score_ids);
 }
 
@@ -132,7 +128,7 @@ fn test_distribute_many_prizes() {
                 },
             );
         i += 1;
-    };
+    }
 
     testing::set_block_timestamp((TEST_END_TIME() + MIN_SUBMISSION_PERIOD).into());
 
@@ -144,7 +140,7 @@ fn test_distribute_many_prizes() {
         }
         prize_ids.append(i + 1);
         i += 1;
-    };
+    }
 
     contracts.tournament.distribute_prizes(tournament_id, prize_ids);
 }
